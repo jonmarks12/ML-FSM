@@ -11,7 +11,7 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
         method="L-BFGS-B", maxls=3, maxiter=1, dmax=0.3, nnodes_min=10, ninterp=100,
         calculator="qchem", chg=0, mult=1, nt=1, verbose=False, ckpt='schnet_fine_tuned.ckpt', interpolate=False, **kwargs):
 
-    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}")
+    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_ANI1")
     if interpolate:
         outdir = os.path.join(reaction_dir, f"interp_{interp}")
     if not os.path.exists(outdir):
@@ -31,6 +31,9 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
     elif calculator == "gnn":
         from nn_calc import SchNetRunner
         calc = SchNetRunner(reactant,ckpt)
+    elif calculator == "torchmd":
+        from torchmd_calc import TorchMDRunner
+        calc = TorchMDRunner(reactant,ckpt)
     else:
         raise Exception(f"Unknown calculator {calculator}")
 
@@ -69,8 +72,8 @@ if __name__ == '__main__':
     parser.add_argument("--maxls",type=int,help="maximum number of line search steps", default=3)
     parser.add_argument("--maxiter", type=int, help="number of iterations", default=2)
     parser.add_argument("--dmax", type=float, help="max step size", default=0.05)
-    parser.add_argument("--calculator", type=str, help="energy/force method", default='qchem', choices=['qchem', 'xtb','gnn'])
-    parser.add_argument("--ckpt", type=str, help='ckpt file for pre-trained SchNet model',default='/Users/jonmarks/fsm/gnns/schnet_fine_tuned.ckpt')
+    parser.add_argument("--calculator", type=str, help="energy/force method", default='qchem', choices=['qchem', 'xtb','gnn','torchmd'])
+    parser.add_argument("--ckpt", type=str, help='ckpt file for pre-trained SchNet model',default='gnns/schnet_fine_tuned.ckpt')
     parser.add_argument("--chg", type=int, help="total molecule charge", default=0)
     parser.add_argument("--mult", type=int, help="spin multiplicity", default=1)
     parser.add_argument("--nt", type=int, help="omp threads", default=1)

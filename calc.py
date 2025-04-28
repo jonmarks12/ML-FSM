@@ -117,11 +117,10 @@ class QChemRunner(object):
 
         positions = positions.reshape(-1, 3)
         rem = {'jobtype': jobtype,
-                'method': 'wb97x-v',
-                'basis': 'def2-tzvp',
-                'sym_ignore': 'true',
-                'symmetry': 'false',
-                'scf_algorithm': 'diis_gdm',
+                'method': 'wb97x',
+                'basis': '6-31G*',
+                'xc_grid': '1',
+                'scf_algorithm': 'diis',
                 'scf_max_cycles': '500'}
         if jobtype == 'freq':
             rem['vibman_print'] = '4'

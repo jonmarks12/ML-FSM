@@ -4,6 +4,7 @@ import numpy as np
 import subprocess
 from tempfile import NamedTemporaryFile
 from ase.units import Bohr
+
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from torch_geometric.nn import SchNet
@@ -40,7 +41,7 @@ class SchNetLightning(LightningModule):
 
 class SchNetRunner(object):
 
-    def __init__(self,reactant,checkpoint='/Users/jonmarks/fsm/gnns/schnet_fine_tuned.ckpt'):
+    def __init__(self,reactant,checkpoint='gnns/schnet_fine_tuned.ckpt'):
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.make_atoms_object(reactant)
         self.create_model(checkpoint)
@@ -51,7 +52,7 @@ class SchNetRunner(object):
 
 
     def create_model(self,checkpoint):
-        self.model = SchNetLightning.load_from_checkpoint(checkpoint).to(self.device)
+        self.model = SchNetLightning.load_from_checkpoint(checkpoint,strict=False).to(self.device)
         print('Pre-trained model parameters loaded')
         
     def energy(self,x):
