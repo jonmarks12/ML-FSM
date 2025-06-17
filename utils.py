@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from ase.io import read, write
 from geom import project_trans_rot
 
@@ -15,3 +16,15 @@ def load_xyz(reaction_dir):
     product.set_positions(p_xyz.reshape(-1, 3))
     return reactant, product
 
+def float_check(x):
+    """
+    Converts scalars, 0D arrays, or single element containers to a float.
+    Leaves floats alone.
+    Raises an error for anything else.
+    """
+    if isinstance(x,float):
+        return x
+    elif isinstance(x,(np.ndarray,list,tuple)) and len(x)==1:
+        return float(x[0])
+    else:
+        raise TypeError(f"Cannot convert safely to float: {x} ({type(x)})")

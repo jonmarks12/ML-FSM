@@ -20,9 +20,12 @@ class Optimizer(object):
 
 class CartesianOptimizer(Optimizer):
 
-    def obj(self, xyz, tangent):
+    def obj(self, xyz, tangent, atoms):
+        atoms.set_positions(xyz.reshape(-1,3))
+        atoms.calc = self.calc
         proj = generate_project_rt_tan(xyz.reshape(-1, 3), tangent)
-        energy, grads = self.calc(xyz)
+        energy = atoms.get_potential_energy()
+        grads = -1*atoms.get_forces().flatten() #convert forces to grad
         pgrads = proj @ grads
         return energy, pgrads
 
@@ -30,7 +33,7 @@ class CartesianOptimizer(Optimizer):
         xyz = atoms.get_positions().flatten()
         config = {'fun': self.obj,
                   'x0': xyz,
-                  'args': (tangent,),
+                  'args': (tangent,atoms),
                   'jac': True,
                   'method': self.method,
                   'bounds': [[j-self.dmax, j+self.dmax] for j in xyz],
@@ -79,10 +82,13 @@ class InternalsOptimizer(Optimizer):
             bounds += [(q[i]-self.dmax, q[i]+self.dmax)]
         return bounds
 
-    def obj(self, q, xyzref, tangent):
+    def obj(self, q, xyzref, tangent, atoms):
         xyz = self.coordsobj.x(xyzref, q)
+        atoms.set_positions(xyz.reshape(-1,3))
+        atoms.calc = self.calc
         proj = generate_project_rt_tan(xyz.reshape(-1, 3), tangent)
-        energy, grads = self.calc(xyz)
+        energy = atoms.get_potential_energy()
+        grads = -1*atoms.get_forces().flatten()#convert forces to grad
         pgrads = proj @ grads
         B = self.coordsobj.b_matrix(xyz)
         B_inv = np.linalg.pinv(B)
@@ -97,7 +103,7 @@ class InternalsOptimizer(Optimizer):
         xyz = atoms.get_positions()
         config = {'fun': self.obj,
                   'x0': q,
-                  'args': (xyz, tangent,),
+                  'args': (xyz, tangent, atoms),
                   'jac': True,
                   'method': self.method,
                   'bounds': self.compute_bounds(q),
