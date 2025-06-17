@@ -13,6 +13,7 @@ pip install -r requirements.txt
 ```
 
 ## Example
+For interactive use see FSM_GNN_Colab_Example.ipynb
 
 To run the FSM with default parameters and on a Diels Alder reaction run:
 ```python
