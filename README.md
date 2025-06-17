@@ -1,24 +1,25 @@
-# FSM
+# ML-FSM
 
-This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation.
+This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
 
 ## Installation
 
 Clone the repository and install dependencies listed in `requirements.txt`:
 
 ```bash
-git clone https://github.com/thegomeslab/fsm.git
-cd fsm
+git clone https://github.com/jonmarks12/ML-FSM.git
+cd ML-FSM
 pip install -r requirements.txt
 ```
 
 ## Example
+For interactive use see FSM_GNN_Colab_Example.ipynb
 
 To run the FSM with default parameters and on a Diels Alder reaction run:
 ```python
 python fsm.py data/sharada/06_diels_alder/ 
 ```
-Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported are SchNet, AIMNet2, MACEOFF23, FAIR UMA, TensorNet, xTB, QChem.
+Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
 FSM parameters and configuration options can be adjusted directly in fsm.py
 
