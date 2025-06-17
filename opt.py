@@ -24,8 +24,8 @@ class CartesianOptimizer(Optimizer):
         atoms.set_positions(xyz.reshape(-1,3))
         atoms.calc = self.calc
         proj = generate_project_rt_tan(xyz.reshape(-1, 3), tangent)
-        energy = atoms.get_potential_energy()
         grads = -1*atoms.get_forces().flatten() #convert forces to grad
+        energy = atoms.get_potential_energy()
         pgrads = proj @ grads
         return energy, pgrads
 
@@ -87,8 +87,8 @@ class InternalsOptimizer(Optimizer):
         atoms.set_positions(xyz.reshape(-1,3))
         atoms.calc = self.calc
         proj = generate_project_rt_tan(xyz.reshape(-1, 3), tangent)
-        energy = atoms.get_potential_energy()
         grads = -1*atoms.get_forces().flatten()#convert forces to grad
+        energy = atoms.get_potential_energy()
         pgrads = proj @ grads
         B = self.coordsobj.b_matrix(xyz)
         B_inv = np.linalg.pinv(B)
