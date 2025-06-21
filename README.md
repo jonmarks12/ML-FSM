@@ -1,5 +1,4 @@
 # ML-FSM
-
 This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
 
 ## Installation
