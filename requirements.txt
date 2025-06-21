@@ -1,0 +1,7 @@
+numpy==2.0.2
+scipy==1.13.1
+networkx==3.2.1
+ase==3.25.0
+geometric==1.1
+torch==2.6.0
+torch-geometric==2.6.1

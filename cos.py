@@ -6,6 +6,7 @@ from geom import distance, magnitude, normalize, calculate_arc_length, \
                   project_trans_rot, generate_project_rt, generate_project_rt_tan
 from interp import Linear, LST, RIC
 from coords import Cartesian
+from utils import float_check
 
 class FreezingString(object):
 
@@ -134,19 +135,19 @@ class FreezingString(object):
         for i in range(self.r_nnodes):
             if self.r_energy[i] is None and self.r_fix[i]:
                 positions = self.r_string[i].get_positions()
-                energy = optimizer.calc.energy(positions)
-                self.r_energy[i] = energy   
+                energy = optimizer.calc.get_potential_energy(self.r_string[i])
+                self.r_energy[i] = float_check(energy)   
             elif not self.r_fix[i]:
                 assert self.r_tangent[i] is not None
                 atoms = self.r_string[i]
                 try:
                     atoms, energy, ngrad = optimizer.optimize(atoms, self.r_tangent[i])
                     self.r_string[i] = atoms
-                    self.r_energy[i] = energy
+                    self.r_energy[i] = float_check(energy)
                 except:
                     positions = atoms.get_positions()
-                    energy = optimizer.calc.energy(positions)
-                    self.r_energy[i] = energy   
+                    energy = optimizer.calc.get_potential_energy(atoms)
+                    self.r_energy[i] = float_check(energy)   
                     ngrad = 0                    
                 self.r_fix[i] = True
                 self.ngrad += ngrad
@@ -154,20 +155,20 @@ class FreezingString(object):
         for i in range(self.p_nnodes):
             if self.p_energy[i] is None and self.p_fix[i]:
                 positions = self.p_string[i].get_positions()
-                energy = optimizer.calc.energy(positions)
-                self.p_energy[i] = energy   
+                energy = optimizer.calc.get_potential_energy(self.p_string[i])
+                self.p_energy[i] = float_check(energy)   
             elif not self.p_fix[i]:
                 assert self.p_tangent[i] is not None
                 atoms = self.p_string[i]
                 try:
                     atoms, energy, ngrad = optimizer.optimize(atoms, self.p_tangent[i])
                     self.p_string[i] = atoms
-                    self.p_energy[i] = energy   
+                    self.p_energy[i] = float_check(energy) 
                 except:
                     positions = atoms.get_positions()
-                    energy = optimizer.calc.energy(positions)
-                    self.p_energy[i] = energy   
-                    ngrad = 0                    
+                    energy = optimizer.calc.get_potential_energy(atoms)
+                    self.p_energy[i] = float_check(energy)   
+                    ngrad = 0
                 self.p_fix[i] = True
                 self.ngrad += ngrad
 
@@ -184,7 +185,7 @@ class FreezingString(object):
       string = np.stack([atoms.get_positions() for atoms in path], axis=0)
       s = calculate_arc_length(string)
       energy = np.array(self.r_energy + self.p_energy[::-1])
-      energy = 627.51 * (energy - energy.min())
+      energy = (energy - energy.min()) #now will be in just eV
       with open(outfile, 'w') as f:
           for i, atoms in enumerate(path):
               _, xyz = project_trans_rot(string[0], string[i])
