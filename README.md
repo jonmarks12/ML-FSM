@@ -1,4 +1,7 @@
 # ML-FSM
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/FSM_GNN_Colab_Example.ipynb)
+
 This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
 
 ## Installation
