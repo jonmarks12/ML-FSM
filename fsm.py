@@ -1,8 +1,7 @@
 import os
 import shutil
 import argparse
-import torch
-from calc import QChemRunner, XTBRunner   
+#import torch
 from cos import FreezingString
 from opt import CartesianOptimizer, InternalsOptimizer
 from utils import load_xyz
@@ -11,7 +10,7 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
         method="L-BFGS-B", maxls=3, maxiter=1, dmax=0.3, nnodes_min=10, ninterp=100,
         calculator="qchem", chg=0, mult=1, nt=1, verbose=False, ckpt='schnet_fine_tuned.ckpt', interpolate=False, **kwargs):
 
-    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_ASE")
+    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_ASE_calc_benchmark")
     if interpolate:
         outdir = os.path.join(reaction_dir, f"interp_{interp}")
     if not os.path.exists(outdir):
@@ -23,12 +22,12 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
     # load initial states
     reactant, product = load_xyz(reaction_dir)
 
-    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    #dev = "cuda" if torch.cuda.is_available() else "cpu"
     # set calculator
     if args.calculator == "qchem":
         from ase.calculators.qchem import QChem
         calc = QChem(label="fsm", method='wb97x-v', basis='def2-tzvp', charge=chg, multiplicity=mult,
-                                     sym_ignore='true', symmetry='false', scf_algorithm='diis',
+                                     sym_ignore='true',symmetry='false', scf_algorithm='diis_gdm',
                                      scf_max_cycles='500', nt=8)
     elif args.calculator == "xtb":
         from xtb.ase.calculator import XTB
@@ -43,6 +42,9 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
     elif args.calculator == "aimnet2":
         from aimnet2calc import AIMNet2ASE
         calc = AIMNet2ASE("aimnet2",charge=chg,mult=mult)
+    elif args.calculator == "emt":
+        from ase.calculators.emt import EMT
+        calc = EMT()
     elif args.calculator == "mace":
         from mace.calculators import mace_off
         calc = mace_off(model='large',device=dev)
@@ -87,7 +89,7 @@ if __name__ == '__main__':
     parser.add_argument("--maxls",type=int,help="maximum number of line search steps", default=3)
     parser.add_argument("--maxiter", type=int, help="number of iterations", default=2)
     parser.add_argument("--dmax", type=float, help="max step size", default=0.05)
-    parser.add_argument("--calculator", type=str, help="energy/force method", default='qchem', choices=['qchem', 'xtb','schnet','torchmd','uma','aimnet2'])
+    parser.add_argument("--calculator", type=str, help="energy/force method", default='qchem', choices=['qchem', 'xtb','schnet','torchmd','uma','aimnet2','emt'])
     parser.add_argument("--ckpt", type=str, help='ckpt file for pre-trained SchNet model',default='gnns/schnet_fine_tuned.ckpt')
     parser.add_argument("--chg", type=int, help="total molecule charge", default=0)
     parser.add_argument("--mult", type=int, help="spin multiplicity", default=1)

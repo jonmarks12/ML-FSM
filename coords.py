@@ -1,10 +1,10 @@
 import itertools
 import numpy as np
 import networkx as nx
+from ase import Atoms
 from ase.data import covalent_radii, vdw_radii
 from ase.units import Bohr
 from collections import OrderedDict
-from scipy.spatial.distance import euclidean
 from scipy.interpolate import CubicSpline
 from scipy.optimize import lsq_linear
 from geom import project_trans_rot
@@ -171,7 +171,8 @@ class Redundant(Coordinates):
       # compute covalent bonds
       conn = np.zeros((natoms, natoms), dtype=int)
       for i,j in itertools.combinations(range(natoms), 2):
-        R = euclidean(xyz[i], xyz[j])
+        #R = euclidean(xyz[i], xyz[j])
+        R = atoms.get_distance(i,j,mic=True)
         Rcov = (covalent_radii[z[i]] + covalent_radii[z[j]])
         if R < 1.3 * Rcov:
           conn[i, j] = conn[j, i] = 1
@@ -195,7 +196,8 @@ class Redundant(Coordinates):
           if i_frag != j_frag:
             # check distance
             conn_frag_ij = conn_frag_dist[i_frag, j_frag]
-            R = euclidean(xyz[i], xyz[j])
+            R = atoms.get_distance(i,j,mic=True)
+            #R = euclidean(xyz[i], xyz[j])
             if conn_frag_ij == 0. or conn_frag_ij > R:
               conn_frag_dist[i_frag, j_frag] = conn_frag_dist[j_frag, i_frag] = R
               conn_frag_idx[i_frag, j_frag] = [i, j]
@@ -213,7 +215,8 @@ class Redundant(Coordinates):
           j_frag = np.argmax([j in frag for frag in frags])
           if i_frag != j_frag:
             conn_frag_ij = conn_frag_dist[i_frag, j_frag]
-            R = euclidean(xyz[i], xyz[j])
+            #R = euclidean(xyz[i], xyz[j])
+            R = atoms.get_distance(i,j,mic=True)
             if R<2.0 or R<1.3*conn_frag_ij:
               conn_frag_aux[i, j] = conn_frag_aux[j, i] = 1
         conn_frag_aux = conn_frag_aux - conn_frag
@@ -233,12 +236,14 @@ class Redundant(Coordinates):
       conn_hbond = np.zeros((natoms, natoms), dtype=int)
       for i,j in itertools.combinations(range(natoms), 2):
         if is_hbond_h[i] and not conn[i, j] and z[j] in X_atnum:
-          R = euclidean(xyz[i], xyz[j])
+          #R = euclidean(xyz[i], xyz[j])
+          R = atoms.get_distance(i,j,mic=True)
           Rvdw = vdw_radii[z[i]] + vdw_radii[z[j]]
           if R < 0.9*Rvdw:
             conn_hbond[i, j] = conn_hbond[j, i] = 1
         elif is_hbond_h[j] and not conn[i, j] and z[i] in X_atnum:
-          R = euclidean(xyz[i], xyz[j])
+          #R = euclidean(xyz[i], xyz[j])
+          R = atoms.get_distance(i,j,mic=True)
           Rvdw = vdw_radii[z[i]] + vdw_radii[z[j]]
           if R < 0.9*Rvdw:
             conn_hbond[i, j] = conn_hbond[j, i] = 1
