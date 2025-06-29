@@ -1,7 +1,6 @@
 import os
 import shutil
 import argparse
-#import torch
 from cos import FreezingString
 from opt import CartesianOptimizer, InternalsOptimizer
 from utils import load_xyz
@@ -10,7 +9,7 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
         method="L-BFGS-B", maxls=3, maxiter=1, dmax=0.3, nnodes_min=10, ninterp=100,
         calculator="qchem", chg=0, mult=1, nt=1, verbose=False, ckpt='schnet_fine_tuned.ckpt', interpolate=False, **kwargs):
 
-    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_ASE_calc_benchmark")
+    outdir = os.path.join(reaction_dir, f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}")
     if interpolate:
         outdir = os.path.join(reaction_dir, f"interp_{interp}")
     if not os.path.exists(outdir):
@@ -22,7 +21,6 @@ def fsm(reaction_dir, optcoords='cart', interp='lst',
     # load initial states
     reactant, product = load_xyz(reaction_dir)
 
-    #dev = "cuda" if torch.cuda.is_available() else "cpu"
     # set calculator
     if args.calculator == "qchem":
         from ase.calculators.qchem import QChem
