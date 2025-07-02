@@ -1,9 +1,24 @@
+"""Optimization routines for FSM nodes.
+
+Contains Cartesian and internal coordinate optimizers using projected gradients
+and scipy-based minimization. Optimizers are used to refine node geometries
+along a reaction path subject to constraints imposed by the FSM.
+"""
+
+import numpy as np
 from scipy.optimize import minimize
-from .coords import Cartesian, Redundant
-from .geom import *
+
+from mlfsm.coords import Redundant
+from mlfsm.geom import generate_project_rt_tan
 
 
 class Optimizer(object):
+    """Base optimizer class for use with FSM node optimization.
+
+    This abstract class provides an interface for optimizer implementations,
+    requiring subclasses to define `obj` and `optimize` methods.
+    """
+
     def __init__(self, calc, method="L-BFGS-B", maxiter=3, maxls=6, dmax=0.3):
         self.calc = calc
         self.method = method
@@ -12,14 +27,49 @@ class Optimizer(object):
         self.dmax = float(dmax)
 
     def obj(self, xyz, tangent):
+        """Objective function to be implemented by subclasses.
+
+        Args:
+            xyz (ndarray): Cartesian coordinates (flattened).
+            tangent (ndarray): Tangent vector used for projection.
+
+        Raises
+        ------
+            NotImplementedError: Always, since this is an abstract method.
+        """
         raise NotImplementedError("No objective function")
 
     def optimize(self, xyz, tangent):
+        """Optimization method to be implemented by subclasses.
+
+        Args:
+            xyz (ndarray): Cartesian coordinates (flattened).
+            tangent (ndarray): Tangent vector used for projection.
+
+        Raises
+        ------
+            NotImplementedError: Always, since this is an abstract method.
+        """
         raise NotImplementedError("No optimize function")
 
 
 class CartesianOptimizer(Optimizer):
+    """Performs optimization in Cartesian coordinates using projected gradients."""
+
     def obj(self, xyz, tangent, atoms):
+        """Objective function for cartesian coordinate optimization.
+
+        Computes energy and projected gradient given a position and tangent vector.
+
+        Args:
+            xyz (ndarray): Cartesian coordinates.
+            tangent(ndarray): Tangent vector in Cartesian space.
+            atoms (ase.Atoms): ASE atoms object with calculator.
+
+        Returns
+        -------
+            Tuple[float, ndarray]: Energy and projected gradient.
+        """
         atoms.set_positions(xyz.reshape(-1, 3))
         atoms.calc = self.calc
         proj = generate_project_rt_tan(xyz.reshape(-1, 3), tangent)
@@ -29,6 +79,17 @@ class CartesianOptimizer(Optimizer):
         return energy, pgrads
 
     def optimize(self, atoms, tangent):
+        """Run optimization in Cartesian coordinates using user specified method.
+
+        Args:
+            atoms (ASE.Atoms): ASE atoms object with calculator.
+            tangent (ndarray): Tangent vector used for projection.
+
+        Returns
+        -------
+            tuple[ASE.Atoms,float,int]: ASE.Atoms with final positions, energy of final structure, and number
+            of gradient calculations used by optimization.
+        """
         xyz = atoms.get_positions().flatten()
         config = {
             "fun": self.obj,
@@ -49,6 +110,11 @@ class CartesianOptimizer(Optimizer):
 
 
 class InternalsOptimizer(Optimizer):
+    """Performs projected optimization in internal coordinates.
+
+    NOTE: This optimizer is currently under development and may not work as expected.
+    """
+
     def __init__(self, calc, method="L-BFGS-B", maxiter=3, maxls=6, dmax=0.05):
         super().__init__(calc, method, maxiter, maxls, dmax)
         self.calc = calc
@@ -62,6 +128,18 @@ class InternalsOptimizer(Optimizer):
         self.angle_dmax = dmax * 1.0
 
     def compute_bounds(self, q):
+        """Compute optimization bounds for each internal coordinate.
+
+        Bounds are computed based on the coordinate type (e.g., bend, torsion),
+        ensuring constraints appropriate to their periodicity and domain.
+
+        Args:
+            q (ndarray): Internal coordinate values.
+
+        Returns
+        -------
+            list[tuple[float, float]]: List of bounds for each coordinate.
+        """
         bounds = []
         for i, k in enumerate(self.coordsobj.keys):
             if "linearbnd" in k:
@@ -85,6 +163,21 @@ class InternalsOptimizer(Optimizer):
         return bounds
 
     def obj(self, q, xyzref, tangent, atoms):
+        """Objective function for internal coordinate optimization.
+
+        Computes the energy and projected gradient given internal
+        coordinates and a tangent direction.
+
+        Args:
+            q (ndarray): Internal coordinates.
+            xyzref (ndarray): Reference Cartesian coordinates.
+            tangent (ndarray): Tangent vector in Cartesian space.
+            atoms (ASE.Atoms): ASE atoms object with calculator.
+
+        Returns
+        -------
+            Tuple[float, ndarray]: Energy and projected gradient.
+        """
         xyz = self.coordsobj.x(xyzref, q)
         atoms.set_positions(xyz.reshape(-1, 3))
         atoms.calc = self.calc
@@ -100,6 +193,17 @@ class InternalsOptimizer(Optimizer):
         return energy, pgrads
 
     def optimize(self, atoms, tangent):
+        """Run optimization in internal coordinates using user specified method.
+
+        Args:
+            atoms (ASE.Atoms): ASE atoms object with calculator.
+            tangent (ndarray): Tangent vector used for projection.
+
+        Returns
+        -------
+            tuple[ASE.Atoms,float,int]: ASE.Atoms with final positions, energy of final structure, and number
+            of gradient calculations used by optimization.
+        """
         # self.coordsobj = self.coords(atoms, verbose=False)
         q = self.coordsobj.q(atoms.get_positions())
         xyz = atoms.get_positions()

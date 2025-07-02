@@ -1,22 +1,24 @@
-import os
-import numpy as np
+"""Freezing String Method driver for reaction pathway construction."""
 
+import os
+
+import numpy as np
 from scipy.interpolate import CubicSpline
-from .geom import (
-    distance,
-    magnitude,
-    normalize,
-    calculate_arc_length,
-    project_trans_rot,
-    generate_project_rt,
-    generate_project_rt_tan,
-)
-from .interp import Linear, LST, RIC
+
 from .coords import Cartesian
+from .geom import (
+    calculate_arc_length,
+    distance,
+    normalize,
+    project_trans_rot,
+)
+from .interp import LST, RIC, Linear
 from .utils import float_check
 
 
 class FreezingString(object):
+    """Implements the Freezing String Method."""
+
     def __init__(self, reactant, product, nnodes_min=10, interp="lst", ninterp=100):
         self.nnodes_min = int(nnodes_min)
         self.ninterp = int(ninterp)
@@ -58,6 +60,7 @@ class FreezingString(object):
         self.coordsobj = None
 
     def interpolate(self, outdir):
+        """Generate and write interpolated string between current endpoints."""
         r_atoms = self.r_string[-1]
         p_atoms = self.p_string[-1]
 
@@ -66,7 +69,6 @@ class FreezingString(object):
 
         interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp)
         string = interp()
-        dist = distance(r_xyz, p_xyz)
         s = calculate_arc_length(string)
 
         path = []
@@ -84,6 +86,7 @@ class FreezingString(object):
                     f.write(f"{atom} {float(xyz[0]):.8f} {float(xyz[1]):.8f} {float(xyz[2]):.8f}\n")
 
     def grow(self):
+        """Grow the string by adding nodes from each end."""
         r_atoms = self.r_string[-1]
         p_atoms = self.p_string[-1]
 
@@ -93,7 +96,7 @@ class FreezingString(object):
         interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp)
         try:
             self.coordsobj = interp.coords
-        except:
+        except Exception:
             self.coordsobj = Cartesian(r_atoms, p_atoms)
         string = interp()
         s = calculate_arc_length(string)
@@ -129,13 +132,12 @@ class FreezingString(object):
         self.p_nnodes = len(self.p_string)
 
     def optimize(self, optimizer):
+        """Relax unfixed nodes on the hyperplane orthogonal to the local tangent direction."""
         self.iteration += 1
-        nnodes = self.r_nnodes + self.p_nnodes
         optimizer.coordsobj = self.coordsobj
 
         for i in range(self.r_nnodes):
             if self.r_energy[i] is None and self.r_fix[i]:
-                positions = self.r_string[i].get_positions()
                 energy = optimizer.calc.get_potential_energy(self.r_string[i])
                 self.r_energy[i] = float_check(energy)
             elif not self.r_fix[i]:
@@ -145,8 +147,7 @@ class FreezingString(object):
                     atoms, energy, ngrad = optimizer.optimize(atoms, self.r_tangent[i])
                     self.r_string[i] = atoms
                     self.r_energy[i] = float_check(energy)
-                except:
-                    positions = atoms.get_positions()
+                except Exception:
                     energy = optimizer.calc.get_potential_energy(atoms)
                     self.r_energy[i] = float_check(energy)
                     ngrad = 0
@@ -155,7 +156,6 @@ class FreezingString(object):
 
         for i in range(self.p_nnodes):
             if self.p_energy[i] is None and self.p_fix[i]:
-                positions = self.p_string[i].get_positions()
                 energy = optimizer.calc.get_potential_energy(self.p_string[i])
                 self.p_energy[i] = float_check(energy)
             elif not self.p_fix[i]:
@@ -165,8 +165,7 @@ class FreezingString(object):
                     atoms, energy, ngrad = optimizer.optimize(atoms, self.p_tangent[i])
                     self.p_string[i] = atoms
                     self.p_energy[i] = float_check(energy)
-                except:
-                    positions = atoms.get_positions()
+                except Exception:
                     energy = optimizer.calc.get_potential_energy(atoms)
                     self.p_energy[i] = float_check(energy)
                     ngrad = 0
@@ -179,6 +178,7 @@ class FreezingString(object):
             self.growing = False
 
     def write(self, outdir):
+        """Write current string geometries and relative energies to an XYZ file."""
         outfile = os.path.join(outdir, "vfile_{}.xyz".format(str(self.iteration).zfill(2)))
         path = self.r_string + self.p_string[::-1]
         string = np.stack([atoms.get_positions() for atoms in path], axis=0)
@@ -191,11 +191,10 @@ class FreezingString(object):
                 xyz = xyz.reshape(-1, 3)
                 f.write(f"{self.natoms}\n")
                 f.write(f"{s[i]:.5f} {energy[i]:.3f}\n")
-                for atom, xyz in zip(atoms.get_chemical_symbols(), xyz):
-                    f.write(f"{atom} {float(xyz[0]):.8f} {float(xyz[1]):.8f} {float(xyz[2]):.8f}\n")
-        print(
-            f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {np.array2string(energy, precision=1, floatmode='fixed')}"
-        )
+                for atom, coord in zip(atoms.get_chemical_symbols(), xyz):
+                    f.write(f"{atom} {float(coord[0]):.8f} {float(coord[1]):.8f} {float(coord[2]):.8f}\n")
+        energy_str = np.array2string(energy, precision=1, floatmode="fixed")
+        print(f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {energy_str}")
 
         if not self.growing:
             gradfile = os.path.join(outdir, "ngrad.txt")

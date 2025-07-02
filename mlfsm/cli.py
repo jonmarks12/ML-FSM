@@ -19,10 +19,12 @@ main() : function
 """
 
 import argparse
+
 from .fsm_driver import run_fsm
 
 
 def main():
+    """Run the FSM command-line interface."""
     parser = argparse.ArgumentParser()
     parser.add_argument("reaction_dir", type=str, help="absolute path to reaction")
     parser.add_argument(

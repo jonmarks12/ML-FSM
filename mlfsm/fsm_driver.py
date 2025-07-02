@@ -19,6 +19,7 @@ Exception
 
 import os
 import shutil
+
 from .cos import FreezingString
 from .opt import CartesianOptimizer, InternalsOptimizer
 from .utils import load_xyz
@@ -44,6 +45,7 @@ def run_fsm(
     interpolate=False,
     **kwargs,
 ):
+    """Run the Freezing String Method on a given reaction directory."""
     if suffix:
         outdir = os.path.join(
             reaction_dir,
@@ -67,7 +69,7 @@ def run_fsm(
 
     # set calculator
     if calculator == "qchem":
-        from ase.calculators.qchem import QChem
+        from ase.calculators.qchem import QChem  # noqa: PLC0415
 
         calc = QChem(
             label="fsm",
@@ -82,32 +84,36 @@ def run_fsm(
             nt=8,
         )
     elif calculator == "xtb":
-        from xtb.ase.calculator import XTB
+        from xtb.ase.calculator import XTB  # noqa: PLC0415
 
         calc = XTB(method="GFN2-xTB")
     elif calculator == "uma":
-        from fairchem.core import pretrained_mlip, FAIRChemCalculator
+        import torch  # noqa: PLC0415
+        from fairchem.core import FAIRChemCalculator, pretrained_mlip  # noqa: PLC0415
 
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         predictor = pretrained_mlip.get_predict_unit("uma-s-1", device=dev)
         calc = FAIRChemCalculator(predictor, task_name="omol")
     elif calculator == "torchmd":
-        from torchmd_calc import TMDCalculator
+        from torchmd_calc import TMDCalculator  # noqa: PLC0415
 
         calc = TMDCalculator()
     elif calculator == "aimnet2":
-        from aimnet2calc import AIMNet2ASE
+        from aimnet2calc import AIMNet2ASE  # noqa: PLC0415
 
         calc = AIMNet2ASE("aimnet2", charge=chg, mult=mult)
     elif calculator == "emt":
-        from ase.calculators.emt import EMT
+        from ase.calculators.emt import EMT  # noqa: PLC0415
 
         calc = EMT()
     elif calculator == "mace":
-        from mace.calculators import mace_off
+        import torch  # noqa: PLC0415
+        from mace.calculators import mace_off  # noqa: PLC0415
 
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         calc = mace_off(model="large", device=dev)
     elif calculator == "schnet":
-        from schnet_ase_calculator import SchNetCalculator
+        from schnet_ase_calculator import SchNetCalculator  # noqa: PLC0415
 
         calc = SchNetCalculator(checkpoint=ckpt)
     else:

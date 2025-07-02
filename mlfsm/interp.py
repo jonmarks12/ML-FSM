@@ -1,39 +1,19 @@
-import time
+"""Interpolation methods for constructing paths between endpoint geometries."""
+
 import numpy as np
+from ase.units import Bohr
 from scipy.optimize import minimize
 from scipy.spatial.distance import pdist
-import itertools
-import numpy as np
-from ase.data import covalent_radii, vdw_radii
-from ase.units import Bohr
-from collections import OrderedDict
-from scipy.spatial.distance import euclidean
-from scipy.interpolate import CubicSpline
-from scipy.optimize import lsq_linear
-from .coords import Cartesian, Redundant
-from .geom import project_trans_rot
-from geometric.internal import (
-    Distance,
-    Angle,
-    LinearAngle,
-    Dihedral,
-    OutOfPlane,
-    TranslationX,
-    TranslationY,
-    TranslationZ,
-    RotationA,
-    RotationB,
-    RotationC,
-    CartesianX,
-    CartesianY,
-    CartesianZ,
-)
+
+from .coords import Redundant
 
 angs_to_bohr = 1 / Bohr
 deg_to_rad = np.pi / 180.0
 
 
 class Interpolate(object):
+    """Abstract base class for interpolation schemes between molecular geometries."""
+
     def __init__(self, atoms1, atoms2, ninterp, gtol=1e-4):
         self.atoms1 = atoms1
         self.atoms2 = atoms2
@@ -41,11 +21,19 @@ class Interpolate(object):
         self.gtol = gtol
 
     def __call__(self):
+        """Call the interpolation routine and returns interpolated geometries."""
         return self.interpolate()
 
 
 class Linear(Interpolate):
+    """Linear interpolation of Cartesian coordinates.
+
+    Generates a reaction path by linearly interpolating Cartesian coordinates
+    between two endpoint geometries.
+    """
+
     def interpolate(self):
+        """Compute linear interpolated path between two geometries."""
         xyz1 = self.atoms1.get_positions()
         xyz2 = self.atoms2.get_positions()
 
@@ -54,14 +42,22 @@ class Linear(Interpolate):
 
         string = []
         fs = np.linspace(0, 1, self.ninterp)
-        for i, f in enumerate(fs):
+        for _, f in enumerate(fs):
             x0 = xab(f).flatten()
             string.append(x0)
         return np.array(string, dtype=np.float32)
 
 
 class LST(Interpolate):
+    """Linear Synchronous Transit (LST) interpolation method.
+
+    Halgren, Thomas A., and William N. Lipscomb.
+    "The synchronous transit method for determining reaction pathways and locating molecular transition states."
+    Chemical Physics Letters 49.2 (1977): 225 to 232.
+    """
+
     def obj(self, x_c, f, rab, xab):
+        """Objective function for LST interpolation."""
         x_c = x_c.reshape(-1, 3)
         rab_c = pdist(x_c)
         rab_i = rab(f)
@@ -69,6 +65,7 @@ class LST(Interpolate):
         return (((rab_i - rab_c) ** 2) / rab_i**4).sum() + 5e-2 * ((x_i - x_c) ** 2).sum()
 
     def interpolate(self):
+        """Generate interpolated structures using LST."""
         xyz1 = self.atoms1.get_positions()
         xyz2 = self.atoms2.get_positions()
         pdist_1 = pdist(xyz1)
@@ -88,7 +85,7 @@ class LST(Interpolate):
         }
         string = [xab(0).flatten()]
         fs = np.linspace(0, 1, self.ninterp)[1:-1]
-        for i, f in enumerate(fs):
+        for _, f in enumerate(fs):
             x0 = xab(f).flatten()
             res = minimize(self.obj, x0=x0, args=(f, rab, xab), **minimize_kwargs)
             string.append(res.x)
@@ -97,12 +94,15 @@ class LST(Interpolate):
 
 
 class RIC(Interpolate):
+    """Interpolates in redundant internal coordinates (RIC)."""
+
     def __init__(self, atoms1, atoms2, ninterp, gtol=1e-4):
         super().__init__(atoms1, atoms2, ninterp, gtol)
         self.coords = Redundant(atoms1, atoms2, verbose=False)
         # self.coords = Cartesian(atoms1, atoms2)
 
     def interpolate(self):
+        """Generate interpolated structures using linear interpolation in RIC."""
         xyz1 = self.atoms1.get_positions()
         xyz2 = self.atoms2.get_positions()
         q1 = self.coords.q(xyz1)
@@ -124,7 +124,7 @@ class RIC(Interpolate):
         string = []
         fs = np.linspace(0, 1, self.ninterp)
         xyzref = xyz1.copy()
-        for i, f in enumerate(fs):
+        for _, f in enumerate(fs):
             qtarget = xab(f)
             xyz = self.coords.x(xyzref, qtarget)
             string.append(xyz)

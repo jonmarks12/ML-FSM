@@ -1,10 +1,13 @@
+"""Test CLI wrapper on a sample reaction."""
+
+import os
+import shutil
 import subprocess
 import tempfile
-import shutil
-import os
 
 
 def test_cli_diels_alder():
+    """Run the CLI on the Diels Alder example with the EMT calculator."""
     example_dir = os.path.abspath("examples/data/06_diels_alder")
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -15,6 +18,7 @@ def test_cli_diels_alder():
         # Run the CLI using the EMT calculator
         result = subprocess.run(
             ["pixi", "run", "mlfsm", rxn_dir, "--calculator", "emt", "--suffix", "cli_test"],
+            check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,

@@ -1,23 +1,30 @@
+# ruff: noqa: N802, N803, E741
+"""Geometry utilities for vector operations in FSM-based reaction path methods."""
+
 import numpy as np
 import scipy
 from scipy.spatial.distance import euclidean
 
 
 def distance(v1, v2):
+    """Return the Euclidean distance between two vectors v1 and v2."""
     v1 = np.array(v1)
     v2 = np.array(v2)
     return euclidean(v1.flatten(), v2.flatten())
 
 
 def magnitude(v):
+    """Return the magnitude (L2 norm) of a vector with floor for stability."""
     return np.maximum(1e-12, np.sqrt(v.dot(v)))
 
 
 def normalize(v):
+    """Return the normalized version of a vector."""
     return v / magnitude(v)
 
 
 def calculate_arc_length(string):
+    """Compute cumulative arc length along a string of molecular geometries."""
     nnodes = string.shape[0]
     L = np.zeros((nnodes,))
     s = np.zeros((nnodes,))
@@ -28,6 +35,7 @@ def calculate_arc_length(string):
 
 
 def project_trans_rot(a, b):
+    """Minimizes distance between structures a and b by minimizing rotation and translation."""
     centroid_a = np.mean(a, axis=0, keepdims=True)
     centroid_b = np.mean(b, axis=0, keepdims=True)
     A = a - centroid_a
@@ -43,6 +51,7 @@ def project_trans_rot(a, b):
 
 
 def generate_inertia_I(X):
+    """Compute the moment of inertia tensor for a set of 3D coordinates X."""
     I = np.zeros((3, 3))
     I[0, 0] = np.sum(X[:, 1] ** 2 + X[:, 2] ** 2)
     I[1, 1] = np.sum(X[:, 0] ** 2 + X[:, 2] ** 2)
@@ -57,6 +66,7 @@ def generate_inertia_I(X):
 
 
 def generate_project_rt(X):
+    """Construct a projection operator that removes rigid translations and rotations from X."""
     N = X.shape[0]
     I = generate_inertia_I(X)
     evals, evecs = scipy.linalg.eigh(I)
@@ -106,6 +116,7 @@ def generate_project_rt(X):
 
 
 def generate_project_rt_tan(structure, tangent):
+    """Construct a projection operator orthogonal to translations, rotations, and the tangent vector."""
     proj = generate_project_rt(structure)
     proj_tangent = proj @ tangent
     proj_tangent = normalize(proj_tangent)

@@ -1,10 +1,19 @@
+"""Utility functions for reading input and checking numeric types."""
+
 import os
+
 import numpy as np
-from ase.io import read, write
+from ase.io import read
+
 from .geom import project_trans_rot
 
 
 def load_xyz(reaction_dir):
+    """
+    Load reactant and product geometries from a directory.
+
+    Assumes a file named initial.xyz containing the reactant and product geometries.
+    """
     xyz = os.path.join(reaction_dir, "initial.xyz")
     if not os.path.exists(xyz):
         raise Exception(f"Input file {xyz} not found.")
@@ -19,9 +28,9 @@ def load_xyz(reaction_dir):
 
 def float_check(x):
     """
-    Converts scalars, 0D arrays, or single element containers to a float.
-    Leaves floats alone.
-    Raises an error for anything else.
+    Convert scalars, 0D arrays, or single element containers to a float.
+
+    Leaves floats alone. Raises an error for anything else.
     """
     if isinstance(x, float):
         return x
