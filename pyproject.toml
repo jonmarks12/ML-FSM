@@ -1,12 +1,15 @@
 [project]
 name = "mlfsm"
-description = "ml-fsm"
+description = "python implementation of the Freezing String Method"
 license = {file = "LICENSE"}
 version = "0.0.1"
 readme = "README.md"
 keywords = []
 authors = [{name = "Jonah Marks and Joe Gomes"}]
-requires-python = ">=3.13"
+requires-python = ">=3.9,<3.13"
+
+[project.scripts]
+mlfsm = "mlfsm.cli:main"
 
 [tool.pixi.project]
 channels = ["conda-forge"]
@@ -75,12 +78,12 @@ ignore = [
 convention = "numpy"
 
 [tool.mypy]
-files = ["mlfsm", "tests"]
+files = ["mlfsm","tests"]
 strict = true
 pretty = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "mlfsm"]
+testpaths = ["tests"]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 
