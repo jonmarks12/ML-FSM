@@ -15,10 +15,11 @@ def test_fsm_script_diels_alder() -> None:
         # Copy the example into a temporary directory
         rxn_dir = os.path.join(tmpdir, "06_diels_alder")
         shutil.copytree(example_dir, rxn_dir)
-
+        cwd = os.path.abspath(os.path.dirname(__file__) + "/..")
         # Run the FSM script
         result = subprocess.run(
             ["pixi", "run", "python", script_path, rxn_dir, "--calculator", "emt", "--suffix", "test_fsm_script"],
+            cwd=cwd,
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
