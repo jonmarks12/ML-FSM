@@ -19,20 +19,18 @@ Clone the repository and install dependencies listed in `requirements.txt`:
 ```bash
 git clone https://github.com/jonmarks12/ML-FSM.git
 cd ML-FSM
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Example
 
-To run the FSM with default parameters and on a Diels Alder reaction run:
+To run the FSM with default parameters and the ASE EMT calculator on a Diels Alder reaction run:
 ```python
-python fsm.py data/sharada/06_diels_alder/ 
+python examples/fsm_example.py data/sharada/06_diels_alder/ --calculator emt
 ```
-Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported on the CLI are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
+Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
 To use custom calculators setup your own script, a basic example script/notebook is shown in examples/FSM_GNN_Colab_Example.ipynb
-
-FSM parameters and configuration options can be adjusted directly in fsm.py
 
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
