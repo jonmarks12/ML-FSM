@@ -4,9 +4,7 @@
 [![License](https://img.shields.io/github/license/jonmarks12/ML-FSM)](https://github.com/jonmarks12/ML-FSM/blob/master/LICENSE)
 [![Powered by: Pixi](https://img.shields.io/badge/Powered_by-Pixi-facc15)](https://pixi.sh)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jonmarks12/ML-FSM/test.yml?branch=master&logo=github-actions)](https://github.com/jonmarks12/ML-FSM/actions/)
-[![Codecov](https://img.shields.io/codecov/c/github/jonmarks12/ML-FSM?branch=pkg)](https://codecov.io/gh/jonmarks12/ML-FSM)
-
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jonmarks12/ML-FSM/test.yml?branch=main&logo=github-actions)](https://github.com/jonmarks12/ML-FSM/actions/)
 
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/FSM_GNN_Colab_Example.ipynb)
