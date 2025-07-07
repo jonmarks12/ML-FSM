@@ -1,5 +1,12 @@
 # ML-FSM
 
+
+[![License](https://img.shields.io/github/license/jonmarks12/ML-FSM)](https://github.com/jonmarks12/ML-FSM/blob/master/LICENSE)
+[![Powered by: Pixi](https://img.shields.io/badge/Powered_by-Pixi-facc15)](https://pixi.sh)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jonmarks12/ML-FSM/test.yml?branch=main&logo=github-actions)](https://github.com/jonmarks12/ML-FSM/actions/)
+
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/FSM_GNN_Colab_Example.ipynb)
 
 This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
@@ -11,19 +18,18 @@ Clone the repository and install dependencies listed in `requirements.txt`:
 ```bash
 git clone https://github.com/jonmarks12/ML-FSM.git
 cd ML-FSM
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Example
-For interactive use see FSM_GNN_Colab_Example.ipynb
 
-To run the FSM with default parameters and on a Diels Alder reaction run:
+To run the FSM with default parameters and the ASE EMT calculator on a Diels Alder reaction run:
 ```python
-python fsm.py data/sharada/06_diels_alder/ 
+python examples/fsm_example.py data/sharada/06_diels_alder/ --calculator emt
 ```
-Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
+Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
-FSM parameters and configuration options can be adjusted directly in fsm.py
+To use custom calculators setup your own script, a basic example script/notebook is shown in examples/FSM_GNN_Colab_Example.ipynb
 
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
@@ -53,3 +59,7 @@ Below is a list of direct dependencies and their respective licenses:
 | NetworkX            | BSD 3-Clause  | https://networkx.org/ |
 
 These licenses are all compatible with the MIT license under which this project is distributed. Please refer to each package’s own repository for the full license text.
+
+
+## Credits
+This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [jevandezande/pixi-cookiecutter](https://github.com/jevandezande/pixi-cookiecutter) project template.
