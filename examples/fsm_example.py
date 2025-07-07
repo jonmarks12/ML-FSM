@@ -15,7 +15,6 @@ mlfsm package. Currently supported calculators include:
 Only the selected calculator needs to be installed in the Python environment.
 """
 
-
 import os
 import shutil
 import argparse

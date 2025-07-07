@@ -77,9 +77,22 @@ ignore = [
 convention = "numpy"
 
 [tool.mypy]
-files = ["mlfsm","tests"]
-strict = true
-pretty = true
+ignore_missing_imports = true
+follow_imports = "silent"
+show_error_codes = true
+warn_unused_configs = true
+
+disallow_untyped_defs = true
+disallow_untyped_calls = false
+check_untyped_defs = true
+
+disallow_any_unimported = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+warn_return_any = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_no_return = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

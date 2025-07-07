@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 
 
-def test_fsm_script_diels_alder():
+def test_fsm_script_diels_alder() -> None:
     """Run fsm_example.py on the Diels-Alder example with the EMT calculator."""
     example_dir = os.path.abspath("examples/data/06_diels_alder")
     script_path = os.path.abspath("examples/fsm_example.py")
@@ -18,11 +18,7 @@ def test_fsm_script_diels_alder():
 
         # Run the FSM script
         result = subprocess.run(
-            [
-                "python", script_path, rxn_dir,
-                "--calculator", "emt",
-                "--suffix", "test_fsm_script"
-            ],
+            ["python", script_path, rxn_dir, "--calculator", "emt", "--suffix", "test_fsm_script"],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

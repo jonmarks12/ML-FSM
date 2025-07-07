@@ -1,32 +1,40 @@
 """Freezing String Method driver for reaction pathway construction."""
 
 import os
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
+from ase import Atoms
 from scipy.interpolate import CubicSpline
 
-from .coords import Cartesian
-from .geom import (
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+from mlfsm.coords import Cartesian
+from mlfsm.geom import (
     calculate_arc_length,
     distance,
     normalize,
     project_trans_rot,
 )
-from .interp import LST, RIC, Linear
-from .utils import float_check
+from mlfsm.interp import LST, RIC, Linear
+from mlfsm.utils import float_check
 
 
 class FreezingString(object):
     """Implements the Freezing String Method."""
 
-    def __init__(self, reactant, product, nnodes_min=10, interp="lst", ninterp=100):
+    def __init__(
+        self, reactant: Atoms, product: Atoms, nnodes_min: int = 10, interp_method: str = "ric", ninterp: int = 100
+    ):
+        self.interp: Any
         self.nnodes_min = int(nnodes_min)
         self.ninterp = int(ninterp)
-        if interp == "cart":
+        if interp_method == "cart":
             self.interp = Linear
-        elif interp == "lst":
+        elif interp_method == "lst":
             self.interp = LST
-        elif interp == "ric":
+        elif interp_method == "ric":
             self.interp = RIC
         else:
             raise Exception("Check interpolation method")
@@ -35,31 +43,31 @@ class FreezingString(object):
         self.natoms = len(self.atoms.numbers)
 
         interp = self.interp(reactant, product, ninterp=self.ninterp)
-        string = interp()
+        string = interp().astype(np.float64)
         s = calculate_arc_length(string)
         self.dist = s[-1]
         self.stepsize = self.dist / self.nnodes_min
         print(f"NNODES_MIN: {self.nnodes_min}")
         print(f"DIST: {self.dist:.3f} STEPSIZE: {self.stepsize:.3f}")
 
-        self.r_string = [reactant.copy()]
-        self.r_fix = [True]
-        self.r_energy = [None]
-        self.r_tangent = [None]
+        self.r_string: list[Atoms] = [reactant.copy()]
+        self.r_fix: list[bool] = [True]
+        self.r_energy: list[Optional[float]] = [None]
+        self.r_tangent: list[Optional[NDArray[Any]]] = [None]
         self.r_nnodes = len(self.r_string)
-        self.p_string = [product.copy()]
-        self.p_fix = [True]
-        self.p_energy = [None]
-        self.p_tangent = [None]
+        self.p_string: list[Atoms] = [product.copy()]
+        self.p_fix: list[bool] = [True]
+        self.p_energy: list[Optional[float]] = [None]
+        self.p_tangent: list[Optional[NDArray[Any]]] = [None]
         self.p_nnodes = len(self.p_string)
 
         self.growing = True
         self.iteration = 0
         self.ngrad = 0
 
-        self.coordsobj = None
+        self.coordsobj: Any = None
 
-    def interpolate(self, outdir):
+    def interpolate(self, outdir: str) -> None:
         """Generate and write interpolated string between current endpoints."""
         r_atoms = self.r_string[-1]
         p_atoms = self.p_string[-1]
@@ -68,7 +76,7 @@ class FreezingString(object):
         r_xyz, p_xyz = r_xyz.flatten(), p_xyz.flatten()
 
         interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp)
-        string = interp()
+        string = interp().astype(np.float64)
         s = calculate_arc_length(string)
 
         path = []
@@ -85,7 +93,7 @@ class FreezingString(object):
                 for atom, xyz in zip(atoms.get_chemical_symbols(), atoms.get_positions()):
                     f.write(f"{atom} {float(xyz[0]):.8f} {float(xyz[1]):.8f} {float(xyz[2]):.8f}\n")
 
-    def grow(self):
+    def grow(self) -> None:
         """Grow the string by adding nodes from each end."""
         r_atoms = self.r_string[-1]
         p_atoms = self.p_string[-1]
@@ -131,7 +139,7 @@ class FreezingString(object):
         self.p_tangent += [normalize(cs(s[p_idx], 1))]
         self.p_nnodes = len(self.p_string)
 
-    def optimize(self, optimizer):
+    def optimize(self, optimizer: Any) -> None:
         """Relax unfixed nodes on the hyperplane orthogonal to the local tangent direction."""
         self.iteration += 1
         optimizer.coordsobj = self.coordsobj
@@ -177,7 +185,7 @@ class FreezingString(object):
         if self.dist < self.stepsize:
             self.growing = False
 
-    def write(self, outdir):
+    def write(self, outdir: str) -> None:
         """Write current string geometries and relative energies to an XYZ file."""
         outfile = os.path.join(outdir, "vfile_{}.xyz".format(str(self.iteration).zfill(2)))
         path = self.r_string + self.p_string[::-1]

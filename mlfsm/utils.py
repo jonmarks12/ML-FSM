@@ -3,12 +3,13 @@
 import os
 
 import numpy as np
+from ase import Atoms
 from ase.io import read
 
-from .geom import project_trans_rot
+from mlfsm.geom import project_trans_rot
 
 
-def load_xyz(reaction_dir):
+def load_xyz(reaction_dir: str) -> tuple[Atoms, Atoms]:
     """
     Load reactant and product geometries from a directory.
 
@@ -26,7 +27,7 @@ def load_xyz(reaction_dir):
     return reactant, product
 
 
-def float_check(x):
+def float_check(x: float) -> float:
     """
     Convert scalars, 0D arrays, or single element containers to a float.
 

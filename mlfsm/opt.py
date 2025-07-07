@@ -5,7 +5,11 @@ and scipy-based minimization. Optimizers are used to refine node geometries
 along a reaction path subject to constraints imposed by the FSM.
 """
 
+from typing import Any, Optional
+
 import numpy as np
+from ase import Atoms
+from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from mlfsm.coords import Redundant
@@ -19,14 +23,14 @@ class Optimizer(object):
     requiring subclasses to define `obj` and `optimize` methods.
     """
 
-    def __init__(self, calc, method="L-BFGS-B", maxiter=3, maxls=6, dmax=0.3):
+    def __init__(self, calc: Any, method: str = "L-BFGS-B", maxiter: int = 3, maxls: int = 2, dmax: float = 0.3):
         self.calc = calc
         self.method = method
         self.maxiter = int(maxiter)
         self.maxls = int(maxls)
         self.dmax = float(dmax)
 
-    def obj(self, xyz, tangent):
+    def obj(self, *args: Any, **kwargs: Any) -> Any:
         """Objective function to be implemented by subclasses.
 
         Args:
@@ -39,7 +43,7 @@ class Optimizer(object):
         """
         raise NotImplementedError("No objective function")
 
-    def optimize(self, xyz, tangent):
+    def optimizeobj(self, *args: Any, **kwargs: Any) -> Any:
         """Optimization method to be implemented by subclasses.
 
         Args:
@@ -56,7 +60,7 @@ class Optimizer(object):
 class CartesianOptimizer(Optimizer):
     """Performs optimization in Cartesian coordinates using projected gradients."""
 
-    def obj(self, xyz, tangent, atoms):
+    def obj(self, xyz: NDArray[Any], tangent: NDArray[Any], atoms: Atoms) -> tuple[float, NDArray[Any]]:
         """Objective function for cartesian coordinate optimization.
 
         Computes energy and projected gradient given a position and tangent vector.
@@ -78,7 +82,7 @@ class CartesianOptimizer(Optimizer):
         pgrads = proj @ grads
         return energy, pgrads
 
-    def optimize(self, atoms, tangent):
+    def optimize(self, atoms: Atoms, tangent: NDArray[Any]) -> tuple[Atoms, float, int]:
         """Run optimization in Cartesian coordinates using user specified method.
 
         Args:
@@ -115,7 +119,7 @@ class InternalsOptimizer(Optimizer):
     NOTE: This optimizer is currently under development and may not work as expected.
     """
 
-    def __init__(self, calc, method="L-BFGS-B", maxiter=3, maxls=6, dmax=0.05):
+    def __init__(self, calc: Any, method: str = "L-BFGS-B", maxiter: int = 3, maxls: int = 6, dmax: float = 0.05):
         super().__init__(calc, method, maxiter, maxls, dmax)
         self.calc = calc
         self.method = method
@@ -124,10 +128,10 @@ class InternalsOptimizer(Optimizer):
         self.dmax = float(dmax)
         self.coords = Redundant
         # self.coords = Cartesian
-        self.coordsobj = None
+        self.coordsobj: Optional[Any] = None
         self.angle_dmax = dmax * 1.0
 
-    def compute_bounds(self, q):
+    def compute_bounds(self, q: NDArray[Any]) -> list[tuple[float, float]]:
         """Compute optimization bounds for each internal coordinate.
 
         Bounds are computed based on the coordinate type (e.g., bend, torsion),
@@ -140,6 +144,7 @@ class InternalsOptimizer(Optimizer):
         -------
             list[tuple[float, float]]: List of bounds for each coordinate.
         """
+        assert self.coordsobj is not None, "Coordsobj must be initialized"
         bounds = []
         for i, k in enumerate(self.coordsobj.keys):
             if "linearbnd" in k:
@@ -162,7 +167,9 @@ class InternalsOptimizer(Optimizer):
                 bounds += [(q[i] - self.dmax, q[i] + self.dmax)]
         return bounds
 
-    def obj(self, q, xyzref, tangent, atoms):
+    def obj(
+        self, q: NDArray[Any], xyzref: NDArray[Any], tangent: NDArray[Any], atoms: Atoms
+    ) -> tuple[float, NDArray[Any]]:
         """Objective function for internal coordinate optimization.
 
         Computes the energy and projected gradient given internal
@@ -178,6 +185,7 @@ class InternalsOptimizer(Optimizer):
         -------
             Tuple[float, ndarray]: Energy and projected gradient.
         """
+        assert self.coordsobj is not None, "Coordsobj must be initialized"
         xyz = self.coordsobj.x(xyzref, q)
         atoms.set_positions(xyz.reshape(-1, 3))
         atoms.calc = self.calc
@@ -192,7 +200,7 @@ class InternalsOptimizer(Optimizer):
         pgrads = P @ BT_inv @ pgrads
         return energy, pgrads
 
-    def optimize(self, atoms, tangent):
+    def optimize(self, atoms: Atoms, tangent: NDArray[Any]) -> tuple[Atoms, float, int]:
         """Run optimization in internal coordinates using user specified method.
 
         Args:
@@ -204,7 +212,7 @@ class InternalsOptimizer(Optimizer):
             tuple[ASE.Atoms,float,int]: ASE.Atoms with final positions, energy of final structure, and number
             of gradient calculations used by optimization.
         """
-        # self.coordsobj = self.coords(atoms, verbose=False)
+        assert self.coordsobj is not None, "Coordsobj must be initialized"
         q = self.coordsobj.q(atoms.get_positions())
         xyz = atoms.get_positions()
         config = {
