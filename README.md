@@ -13,12 +13,12 @@ This repository provides an implementation of the Freezing String Method (FSM) f
 
 ## Installation
 
-Clone the repository and install dependencies listed in `requirements.txt`:
+Clone the repository and install:
 
 ```bash
 git clone https://github.com/jonmarks12/ML-FSM.git
 cd ML-FSM
-pip install -e .
+pip install .
 ```
 
 ## Example
