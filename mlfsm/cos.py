@@ -90,7 +90,7 @@ class FreezingString(object):
             for i, atoms in enumerate(path):
                 f.write(f"{self.natoms}\n")
                 f.write(f"{s[i]:.5f}\n")
-                for atom, xyz in zip(atoms.get_chemical_symbols(), atoms.get_positions()):
+                for atom, xyz in zip(atoms.get_chemical_symbols(), atoms.get_positions(), strict=False):
                     f.write(f"{atom} {float(xyz[0]):.8f} {float(xyz[1]):.8f} {float(xyz[2]):.8f}\n")
 
     def grow(self) -> None:
@@ -199,7 +199,7 @@ class FreezingString(object):
                 xyz = xyz.reshape(-1, 3)
                 f.write(f"{self.natoms}\n")
                 f.write(f"{s[i]:.5f} {energy[i]:.3f}\n")
-                for atom, coord in zip(atoms.get_chemical_symbols(), xyz):
+                for atom, coord in zip(atoms.get_chemical_symbols(), xyz, strict=False):
                     f.write(f"{atom} {float(coord[0]):.8f} {float(coord[1]):.8f} {float(coord[2]):.8f}\n")
         energy_str = np.array2string(energy, precision=1, floatmode="fixed")
         print(f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {energy_str}")
