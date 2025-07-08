@@ -7,7 +7,7 @@
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jonmarks12/ML-FSM/test.yml?branch=main&logo=github-actions)](https://github.com/jonmarks12/ML-FSM/actions/)
 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/FSM_GNN_Colab_Example.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/examples/FSM_GNN_Colab_Example.ipynb)
 
 This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
 
