@@ -4,7 +4,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64"]
 
 [dependencies]
-python = "3.10.*"
+python = "3.11.*"
 numpy = "2.0.*"
 scipy = "1.13.*"
 networkx = "3.2.*"
