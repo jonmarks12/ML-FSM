@@ -15,7 +15,7 @@ angs_to_bohr = 1 / Bohr
 deg_to_rad = np.pi / 180.0
 
 
-class Interpolate(object):
+class Interpolate:
     """Abstract base class for interpolation schemes between molecular geometries."""
 
     def __init__(self, atoms1: Atoms, atoms2: Atoms, ninterp: int, gtol: float = 1e-4) -> None:
@@ -101,7 +101,7 @@ class LST(Interpolate):
         fs = np.linspace(0, 1, self.ninterp)[1:-1]
         for _, f in enumerate(fs):
             x0 = xab(f).flatten()
-            res = minimize(self.obj, x0=x0, args=(f, rab, xab), **minimize_kwargs)
+            res = minimize(self.obj, x0=x0, args=(f, rab, xab), **minimize_kwargs)  # type: ignore [call-overload]
             string.append(res.x)
         string += [xab(1).flatten()]
         return np.array(string, dtype=np.float32)

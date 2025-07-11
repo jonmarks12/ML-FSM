@@ -16,7 +16,7 @@ from ase.units import Hartree
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.autograd import grad
-from torch_geometric.nn import SchNet
+from torch_geometric.nn import SchNet  # type: ignore [import-untyped]
 from torchmetrics import MeanSquaredError
 
 
@@ -83,7 +83,7 @@ class SchNetCalculator(Calculator):
         checkpoint (str): Path to the `.ckpt` file containing weights.
     """
 
-    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]
+    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]  # type: ignore [misc]
 
     def __init__(self, checkpoint: str = "gnns/schnet_fine_tuned.ckpt"):
         super().__init__()

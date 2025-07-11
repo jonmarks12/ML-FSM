@@ -16,7 +16,7 @@ from mlfsm.coords import Redundant
 from mlfsm.geom import generate_project_rt_tan
 
 
-class Optimizer(object):
+class Optimizer:
     """Base optimizer class for use with FSM node optimization.
 
     This abstract class provides an interface for optimizer implementations,

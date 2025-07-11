@@ -4,13 +4,13 @@ from typing import ClassVar
 
 import torch
 from ase.calculators.calculator import Calculator, all_changes
-from torchmdnet.models.model import load_model
+from torchmdnet.models.model import load_model  # type: ignore [import-not-found]
 
 
 class TMDCalculator(Calculator):
     """ASE-compatible calculator using a pretrained TorchMD-Net model."""
 
-    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]
+    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]  # type: ignore [misc]
 
     def __init__(self, **kwargs):
         """Initialize the calculator and load the TorchMD-Net model."""
