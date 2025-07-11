@@ -1,5 +1,6 @@
 """Interpolation methods for constructing paths between endpoint geometries."""
 
+from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -15,14 +16,14 @@ angs_to_bohr = 1 / Bohr
 deg_to_rad = np.pi / 180.0
 
 
+@dataclass
 class Interpolate:
     """Abstract base class for interpolation schemes between molecular geometries."""
 
-    def __init__(self, atoms1: Atoms, atoms2: Atoms, ninterp: int, gtol: float = 1e-4) -> None:
-        self.atoms1 = atoms1
-        self.atoms2 = atoms2
-        self.ninterp = ninterp
-        self.gtol = gtol
+    atoms1: Atoms
+    atoms2: Atoms
+    ninterp: int
+    gtol: float = 1e-4
 
     def interpolate(self) -> NDArray[np.float32]:
         """Abstract interpolationn routine-must be overridden."""
@@ -48,12 +49,8 @@ class Linear(Interpolate):
         def xab(f: float) -> NDArray[np.float64]:
             return np.array((1 - f) * xyz1 + f * xyz2, dtype=np.float64)
 
-        string = []
         fs = np.linspace(0, 1, self.ninterp)
-        for _, f in enumerate(fs):
-            x0 = xab(f).flatten()
-            string.append(x0)
-        return np.array(string, dtype=np.float32)
+        return np.fromiter((xab(f).flatten() for f in (fs)), dtype=np.float32)
 
 
 class LST(Interpolate):
@@ -76,6 +73,7 @@ class LST(Interpolate):
         rab_c = pdist(x_c)
         rab_i = rab(f)
         x_i = xab(f).reshape(-1, 3)
+
         return float((((rab_i - rab_c) ** 2) / rab_i**4).sum() + 5e-2 * ((x_i - x_c) ** 2).sum())
 
     def interpolate(self) -> NDArray[np.float32]:
@@ -98,22 +96,22 @@ class LST(Interpolate):
             },
         }
         string = [xab(0).flatten()]
-        fs = np.linspace(0, 1, self.ninterp)[1:-1]
-        for _, f in enumerate(fs):
-            x0 = xab(f).flatten()
-            res = minimize(self.obj, x0=x0, args=(f, rab, xab), **minimize_kwargs)  # type: ignore [call-overload]
-            string.append(res.x)
+        string += [
+            minimize(self.obj, x0=xab(f).flatten(), args=(f, rab, xab), **minimize_kwargs).x  # type: ignore [call-overload]
+            for f in np.linspace(0, 1, self.ninterp)[1:-1]
+        ]
         string += [xab(1).flatten()]
+
         return np.array(string, dtype=np.float32)
 
 
+@dataclass
 class RIC(Interpolate):
     """Interpolates in redundant internal coordinates (RIC)."""
 
-    def __init__(self, atoms1: Atoms, atoms2: Atoms, ninterp: int, gtol: float = 1e-4) -> None:
-        super().__init__(atoms1, atoms2, ninterp, gtol)
-        self.coords = Redundant(atoms1, atoms2, verbose=False)
-        # self.coords = Cartesian(atoms1, atoms2)
+    def __post_init__(self) -> None:
+        """Initialize the RIC interpolator."""
+        self.coords = Redundant(self.atoms1, self.atoms2, verbose=False)
 
     def interpolate(self) -> NDArray[np.float32]:
         """Generate interpolated structures using linear interpolation in RIC."""
@@ -135,13 +133,10 @@ class RIC(Interpolate):
         def xab(f: float) -> NDArray[np.float64]:
             return (1 - f) * q1 + f * q2
 
+        xyz = xyz1
         string = []
-        fs = np.linspace(0, 1, self.ninterp)
-        xyzref = xyz1.copy()
-        for _, f in enumerate(fs):
-            qtarget = xab(f)
-            xyz: NDArray[np.float64] = self.coords.x(xyzref, qtarget)  # type ignore[no-untyped-call]
+        for f in np.linspace(0, 1, self.ninterp):
+            xyz = self.coords.x(xyz, xab(f))  # type ignore[no-untyped-call]
             string.append(xyz)
-            xyzref = xyz.copy()
 
         return np.array(string, dtype=np.float32)

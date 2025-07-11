@@ -5,7 +5,8 @@ and scipy-based minimization. Optimizers are used to refine node geometries
 along a reaction path subject to constraints imposed by the FSM.
 """
 
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from ase import Atoms
@@ -16,6 +17,7 @@ from mlfsm.coords import Redundant
 from mlfsm.geom import generate_project_rt_tan
 
 
+@dataclass
 class Optimizer:
     """Base optimizer class for use with FSM node optimization.
 
@@ -23,12 +25,11 @@ class Optimizer:
     requiring subclasses to define `obj` and `optimize` methods.
     """
 
-    def __init__(self, calc: Any, method: str = "L-BFGS-B", maxiter: int = 3, maxls: int = 2, dmax: float = 0.3):
-        self.calc = calc
-        self.method = method
-        self.maxiter = int(maxiter)
-        self.maxls = int(maxls)
-        self.dmax = float(dmax)
+    calc: Any
+    method: str = "L-BFGS-B"
+    maxiter: int = 3
+    maxls: int = 2
+    dmax: float = 0.3
 
     def obj(self, *args: Any, **kwargs: Any) -> Any:
         """Objective function to be implemented by subclasses.
@@ -113,23 +114,21 @@ class CartesianOptimizer(Optimizer):
         return atomsf, res.fun, res.njev
 
 
+@dataclass
 class InternalsOptimizer(Optimizer):
     """Performs projected optimization in internal coordinates.
 
     NOTE: This optimizer is currently under development and may not work as expected.
     """
 
-    def __init__(self, calc: Any, method: str = "L-BFGS-B", maxiter: int = 3, maxls: int = 6, dmax: float = 0.05):
-        super().__init__(calc, method, maxiter, maxls, dmax)
-        self.calc = calc
-        self.method = method
-        self.maxiter = int(maxiter)
-        self.maxls = int(maxls)
-        self.dmax = float(dmax)
+    maxls: int = 6
+    dmax: float = 0.05
+
+    def __post_init__(self) -> None:
+        """Add coords, coordsobj, and angle_dmax."""
         self.coords = Redundant
-        # self.coords = Cartesian
-        self.coordsobj: Optional[Any] = None
-        self.angle_dmax = dmax * 1.0
+        self.coordsobj: Any | None = None
+        self.angle_dmax = self.dmax * 1.0
 
     def compute_bounds(self, q: NDArray[Any]) -> list[tuple[float, float]]:
         """Compute optimization bounds for each internal coordinate.
@@ -145,6 +144,7 @@ class InternalsOptimizer(Optimizer):
             list[tuple[float, float]]: List of bounds for each coordinate.
         """
         assert self.coordsobj is not None, "Coordsobj must be initialized"
+
         bounds = []
         for i, k in enumerate(self.coordsobj.keys):
             if "linearbnd" in k:
@@ -165,6 +165,7 @@ class InternalsOptimizer(Optimizer):
                 bounds += [(angle_min, angle_max)]
             else:
                 bounds += [(q[i] - self.dmax, q[i] + self.dmax)]
+
         return bounds
 
     def obj(
@@ -186,6 +187,7 @@ class InternalsOptimizer(Optimizer):
             Tuple[float, ndarray]: Energy and projected gradient.
         """
         assert self.coordsobj is not None, "Coordsobj must be initialized"
+
         xyz = self.coordsobj.x(xyzref, q)
         atoms.set_positions(xyz.reshape(-1, 3))
         atoms.calc = self.calc
@@ -198,6 +200,7 @@ class InternalsOptimizer(Optimizer):
         BT_inv = np.linalg.pinv(B.T)
         P = B @ B_inv
         pgrads = P @ BT_inv @ pgrads
+
         return energy, pgrads
 
     def optimize(self, atoms: Atoms, tangent: NDArray[Any]) -> tuple[Atoms, float, int]:
@@ -213,6 +216,7 @@ class InternalsOptimizer(Optimizer):
             of gradient calculations used by optimization.
         """
         assert self.coordsobj is not None, "Coordsobj must be initialized"
+
         q = self.coordsobj.q(atoms.get_positions())
         xyz = atoms.get_positions()
         config = {
@@ -228,4 +232,5 @@ class InternalsOptimizer(Optimizer):
         xf = self.coordsobj.x(xyz, res.x)
         atomsf = atoms.copy()
         atomsf.set_positions(xf)
+
         return atomsf, res.fun, res.njev
