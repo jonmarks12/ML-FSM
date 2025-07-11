@@ -1,3 +1,4 @@
+# ruff: noqa: PLC0415
 """
 Example script for running the Freezing String Method (FSM).
 
@@ -15,9 +16,9 @@ mlfsm package. Currently supported calculators include:
 Only the selected calculator needs to be installed in the Python environment.
 """
 
+import argparse
 import os
 import shutil
-import argparse
 
 from mlfsm.cos import FreezingString
 from mlfsm.opt import CartesianOptimizer, InternalsOptimizer
@@ -83,12 +84,12 @@ def run_fsm(
             nt=nt,
         )
     elif calculator == "xtb":
-        from xtb.ase.calculator import XTB
+        from xtb.ase.calculator import XTB  # type: ignore [import-not-found]
 
         calc = XTB(method="GFN2-xTB")
     elif calculator == "uma":
         import torch
-        from fairchem.core import FAIRChemCalculator, pretrained_mlip
+        from fairchem.core import FAIRChemCalculator, pretrained_mlip  # type: ignore [import-not-found]
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         predictor = pretrained_mlip.get_predict_unit("uma-s-1", device=dev)
@@ -98,7 +99,7 @@ def run_fsm(
 
         calc = TMDCalculator()
     elif calculator == "aimnet2":
-        from aimnet2calc import AIMNet2ASE
+        from aimnet2calc import AIMNet2ASE  # type: ignore [import-not-found]
 
         calc = AIMNet2ASE("aimnet2", charge=chg, mult=mult)
     elif calculator == "emt":
@@ -107,7 +108,7 @@ def run_fsm(
         calc = EMT()
     elif calculator == "mace":
         import torch
-        from mace.calculators import mace_off
+        from mace.calculators import mace_off  # type: ignore [import-not-found]
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         calc = mace_off(model="large", device=dev)

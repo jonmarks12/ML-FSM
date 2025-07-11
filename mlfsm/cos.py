@@ -1,6 +1,6 @@
 """Freezing String Method driver for reaction pathway construction."""
 
-import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
@@ -21,7 +21,7 @@ from mlfsm.interp import LST, RIC, Linear
 from mlfsm.utils import float_check
 
 
-class FreezingString(object):
+class FreezingString:
     """Implements the Freezing String Method."""
 
     def __init__(
@@ -67,8 +67,10 @@ class FreezingString(object):
 
         self.coordsobj: Any = None
 
-    def interpolate(self, outdir: str) -> None:
+    def interpolate(self, outdir: Path | str) -> None:
         """Generate and write interpolated string between current endpoints."""
+        outfile = Path(outdir) / f"interp_{self.iteration:02d}.xyz"
+
         r_atoms = self.r_string[-1]
         p_atoms = self.p_string[-1]
 
@@ -83,15 +85,15 @@ class FreezingString(object):
         for i in range(self.ninterp):
             atoms = self.atoms.copy()
             atoms.set_positions(string[i].reshape(-1, 3))
-            path += [atoms.copy()]
+            path.append(atoms)
 
-        outfile = os.path.join(outdir, "interp_{}.xyz".format(str(self.iteration).zfill(2)))
-        with open(outfile, "w") as f:
+        with outfile.open("w") as f:
             for i, atoms in enumerate(path):
                 f.write(f"{self.natoms}\n")
                 f.write(f"{s[i]:.5f}\n")
-                for atom, xyz in zip(atoms.get_chemical_symbols(), atoms.get_positions(), strict=False):
-                    f.write(f"{atom} {float(xyz[0]):.8f} {float(xyz[1]):.8f} {float(xyz[2]):.8f}\n")
+                for atom, xyz in zip(atoms.get_chemical_symbols(), atoms.get_positions(), strict=True):
+                    x, y, z = map(float, xyz)
+                    f.write(f"{atom} {x:.8f} {y:.8f} {z:.8f}\n")
 
     def grow(self) -> None:
         """Grow the string by adding nodes from each end."""
@@ -185,15 +187,19 @@ class FreezingString(object):
         if self.dist < self.stepsize:
             self.growing = False
 
-    def write(self, outdir: str) -> None:
+    def write(self, outdir: Path | str) -> None:
         """Write current string geometries and relative energies to an XYZ file."""
-        outfile = os.path.join(outdir, "vfile_{}.xyz".format(str(self.iteration).zfill(2)))
+        outdir = Path(outdir)
+        outfile = outdir / f"vfile_{self.iteration:02d}.xyz"
+        gradfile = outdir / "ngrad.txt"
+
         path = self.r_string + self.p_string[::-1]
         string = np.stack([atoms.get_positions() for atoms in path], axis=0)
         s = calculate_arc_length(string)
         energy = np.array(self.r_energy + self.p_energy[::-1])
         energy = energy - energy.min()  # now will be in just eV
-        with open(outfile, "w") as f:
+
+        with outfile.open("w") as f:
             for i, atoms in enumerate(path):
                 _, xyz = project_trans_rot(string[0], string[i])
                 xyz = xyz.reshape(-1, 3)
@@ -205,6 +211,5 @@ class FreezingString(object):
         print(f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {energy_str}")
 
         if not self.growing:
-            gradfile = os.path.join(outdir, "ngrad.txt")
-            with open(gradfile, "w") as f:
+            with gradfile.open("w") as f:
                 f.write(f"{self.ngrad}\n")

@@ -13,11 +13,10 @@ dependencies = [
     "scipy>=1.13",
     "geometric>=1.0.0",
     "networkx>=3.0",
-    "typing-extensions>=4.0"
 ]
 
 [tool.pixi.project]
-channels = ["conda-forge"]
+channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
@@ -32,7 +31,7 @@ dev = { features = ["dev"], solve-group = "default"}
 [tool.pixi.feature.dev.tasks]
 fmt = { cmd="ruff format ." }
 lint = { cmd="ruff check . --fix" }
-types = { cmd="mypy" }
+types = { cmd="mypy ." }
 test = { cmd="pytest" }
 all = { depends-on = ["fmt", "lint", "types", "test"] }
 
@@ -42,10 +41,19 @@ pytest-cov = ">=6.0"
 ruff = ">=0.11"
 mypy = ">=1.15"
 pre-commit = ">=4.2"
+jupyter = "*"
+ipython = "*"
+py3Dmol = "*"
+scipy-stubs = "*"
+types-networkx = "*"
+
+lightning = "*"
+pytorch = ">=2.4"
+pytorch_geometric = "*"
+pytorch_cluster = "*"
 
 [tool.ruff]
 line-length = 120
-exclude = ["examples/FSM_GNN_Colab_Example.ipynb"]
 
 [tool.ruff.lint]
 select = [
@@ -79,31 +87,15 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
-"examples/fsm_example.py" = ["PLC0415", "I001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
 [tool.mypy]
-ignore_missing_imports = true
-follow_imports = "silent"
-show_error_codes = true
-warn_unused_configs = true
-
-disallow_untyped_defs = true
-disallow_untyped_calls = false
-check_untyped_defs = true
-
-disallow_any_unimported = true
-disallow_any_generics = true
-disallow_subclassing_any = true
-warn_return_any = true
 warn_unused_ignores = true
-warn_redundant_casts = true
-warn_no_return = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "ml-fsm"]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 

@@ -8,15 +8,16 @@ Author: Jonah Marks
 Repository: https://github.com/jonmarks12/ML-FSM
 """
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
+from ase import Atoms
 from ase.calculators.calculator import Calculator, all_changes
 from ase.units import Hartree
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.autograd import grad
-from torch_geometric.nn import SchNet
+from torch_geometric.nn import SchNet  # type: ignore [import-untyped]
 from torchmetrics import MeanSquaredError
 
 
@@ -45,7 +46,7 @@ class SchNetLightning(LightningModule):
         num_interactions: int,
         num_gaussians: int,
         cutoff: float,
-    ):
+    ) -> None:
         super().__init__()
         self.save_hyperparameters()
 
@@ -65,7 +66,7 @@ class SchNetLightning(LightningModule):
         """Forward pass through SchNet."""
         return self.model(x, pos)
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> torch.optim.Optimizer:
         """Define optimizer for training."""
         return torch.optim.Adam(self.parameters(), lr=2e-4)
 
@@ -83,9 +84,9 @@ class SchNetCalculator(Calculator):
         checkpoint (str): Path to the `.ckpt` file containing weights.
     """
 
-    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]
+    implemented_properties: ClassVar[list[str]] = ["energy", "forces"]  # type: ignore [misc]
 
-    def __init__(self, checkpoint: str = "gnns/schnet_fine_tuned.ckpt"):
+    def __init__(self, checkpoint: str = "gnns/schnet_fine_tuned.ckpt") -> None:
         super().__init__()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.checkpoint = checkpoint
@@ -95,7 +96,9 @@ class SchNetCalculator(Calculator):
         ).to(self.device)
         self.model.eval()
 
-    def calculate(self, atoms=None, properties=None, system_changes=all_changes):
+    def calculate(  # type: ignore [override]
+        self, atoms: Atoms, properties: list[Any] | None = None, system_changes: list[Any] = all_changes
+    ) -> None:
         """Compute single-point energy and forces using SchNet.
 
         Args:
