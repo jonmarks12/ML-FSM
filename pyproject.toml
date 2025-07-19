@@ -51,6 +51,13 @@ lightning = "*"
 pytorch = ">=2.4"
 pytorch_geometric = "*"
 pytorch_cluster = "*"
+pillow = "<11.3.0"
+
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+numpydoc = "*"
+sphinx-rtd-theme = "*"
+myst-parser = "*"
 
 [tool.ruff]
 line-length = 120
