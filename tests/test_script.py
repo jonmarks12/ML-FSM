@@ -4,17 +4,19 @@ import os
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 def test_fsm_script_diels_alder() -> None:
     """Run fsm_example.py on the Diels-Alder example with the EMT calculator."""
-    example_dir = os.path.abspath("examples/data/06_diels_alder")
-    script_path = os.path.abspath("examples/fsm_example.py")
+    example_dir = Path("examples/data/06_diels_alder")
+    script_path = Path("examples/fsm_example.py")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Copy the example into a temporary directory
-        rxn_dir = os.path.join(tmpdir, "06_diels_alder")
+        rxn_dir = Path(tmpdir) / "06_diels_alder"
         shutil.copytree(example_dir, rxn_dir)
+
         env = os.environ.copy()
         env["PYTHONPATH"] = os.getcwd()
         # Run the FSM script

@@ -8,7 +8,16 @@ import numpy as np
 from ase import Atoms
 from ase.data import covalent_radii, vdw_radii
 from ase.units import Bohr
-from geometric.internal import Angle, CartesianX, CartesianY, CartesianZ, Dihedral, Distance, LinearAngle, OutOfPlane
+from geometric.internal import (  # type: ignore [import-untyped]
+    Angle,
+    CartesianX,
+    CartesianY,
+    CartesianZ,
+    Dihedral,
+    Distance,
+    LinearAngle,
+    OutOfPlane,
+)
 from numpy.typing import NDArray
 
 angs_to_bohr = 1 / Bohr
@@ -19,7 +28,7 @@ MAX_ITERATIONS = 200
 EIGENVAL_CUTOFF = 1e-8
 
 
-class Coordinates(object):
+class Coordinates:
     """Base class for internal coordinate systems used in FSM."""
 
     def __init__(self, atoms1: Atoms, atoms2: Optional[Atoms] = None, verbose: bool = False) -> None:
@@ -42,9 +51,9 @@ class Coordinates(object):
         """Print coordinate values in human-readable format for a given ASE atoms object."""
         xyz = atoms.get_positions()
         xyzb = xyz * angs_to_bohr
-        print("\n%15s%15s" % ("Coordinate", "Value"))
+        print(f"\n{'Coordinate':15}{'Value':15}")
         for name, coord in self.coords.items():
-            print("%15s = %15.8f" % (name, coord.value(xyzb)))
+            print(f"{name:15} = {coord.value(xyzb):15.8f}")
 
     def q(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Return coordinate values in from Cartesian positions."""
@@ -195,7 +204,7 @@ class Redundant(Coordinates):
 
     def get_fragments(self, A: NDArray[np.int_]) -> List[NDArray[np.int_]]:  # noqa: N803
         """Return list of fragments as connected components in adjacency matrix."""
-        G = nx.to_networkx_graph(A)
+        G: Any = nx.to_networkx_graph(A)
         frags = [np.array(list(d)) for d in nx.connected_components(G)]
         return frags
 
