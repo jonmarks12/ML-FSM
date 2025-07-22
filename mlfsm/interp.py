@@ -122,11 +122,9 @@ class RIC(Interpolate):
         dq = q2 - q1
         for i, name in enumerate(self.coords.keys):
             if ("tors" in name) and dq[i] > np.pi:
-                # print(name, dq[i], q1[i])
                 while q1[i] < np.pi:
                     q1[i] += 2 * np.pi
             elif ("tors" in name) and dq[i] < -np.pi:
-                # print(name, dq[i], q2[i])
                 while q2[i] < np.pi:
                     q2[i] += 2 * np.pi
 

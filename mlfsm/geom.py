@@ -44,7 +44,7 @@ def project_trans_rot(
     A = a - centroid_a
     B = b - centroid_b
     H = B.T @ A
-    U, S, Vt = np.linalg.svd(H)
+    U, _S, Vt = np.linalg.svd(H)
     R = U @ Vt
     if np.linalg.det(R) < 0:
         U[:, -1] *= -1
@@ -72,7 +72,7 @@ def generate_project_rt(X: NDArray[np.float64]) -> NDArray[np.float64]:
     """Construct a projection operator that removes rigid translations and rotations from X."""
     N = X.shape[0]
     I = generate_inertia_I(X)
-    evals, evecs = scipy.linalg.eigh(I)
+    _evals, evecs = scipy.linalg.eigh(I)
     evecs = evecs.T
 
     # use the convention that the element with largest abs. value

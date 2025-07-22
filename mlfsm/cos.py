@@ -1,5 +1,6 @@
 """Freezing String Method driver for reaction pathway construction."""
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -20,13 +21,16 @@ from mlfsm.geom import (
 from mlfsm.interp import LST, RIC, Linear
 from mlfsm.utils import float_check
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class FreezingString:
     """Implements the Freezing String Method."""
 
     def __init__(
         self, reactant: Atoms, product: Atoms, nnodes_min: int = 10, interp_method: str = "ric", ninterp: int = 100
-    ):
+    ) -> None:
         self.interp: Any
         self.nnodes_min = int(nnodes_min)
         self.ninterp = int(ninterp)
@@ -37,7 +41,7 @@ class FreezingString:
         elif interp_method == "ric":
             self.interp = RIC
         else:
-            raise Exception("Check interpolation method")
+            raise ValueError("Check interpolation method")
 
         self.atoms = reactant.copy()
         self.natoms = len(self.atoms.numbers)
@@ -47,8 +51,9 @@ class FreezingString:
         s = calculate_arc_length(string)
         self.dist = s[-1]
         self.stepsize = self.dist / self.nnodes_min
-        print(f"NNODES_MIN: {self.nnodes_min}")
-        print(f"DIST: {self.dist:.3f} STEPSIZE: {self.stepsize:.3f}")
+
+        logger.info(f"NNODES_MIN: {self.nnodes_min}")
+        logger.info(f"DIST: {self.dist:.3f} STEPSIZE: {self.stepsize:.3f}")
 
         self.r_string: list[Atoms] = [reactant.copy()]
         self.r_fix: list[bool] = [True]
@@ -208,7 +213,7 @@ class FreezingString:
                 for atom, coord in zip(atoms.get_chemical_symbols(), xyz, strict=False):
                     f.write(f"{atom} {float(coord[0]):.8f} {float(coord[1]):.8f} {float(coord[2]):.8f}\n")
         energy_str = np.array2string(energy, precision=1, floatmode="fixed")
-        print(f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {energy_str}")
+        logging.info(f"ITERATION: {self.iteration} DIST: {self.dist:.2f} ENERGY: {energy_str}")
 
         if not self.growing:
             with gradfile.open("w") as f:
