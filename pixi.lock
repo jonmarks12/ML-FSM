@@ -3194,7 +3194,7 @@ packages:
 - pypi: ./
   name: mlfsm
   version: 0.0.1
-  sha256: 35a6af9904feab3eead4d200adc77b85ae8687be17a48f44a9a8cb7a5d461a5c
+  sha256: e0617775620735b2122bd87c92bde2f8198c3f318d0a3a687efb772bd2758186
   requires_dist:
   - numpy>=1.26
   - ase>=3.22
