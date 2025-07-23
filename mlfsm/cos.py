@@ -47,8 +47,7 @@ class FreezingString:
         self.natoms = len(self.atoms.numbers)
 
         interp = self.interp(reactant, product, ninterp=self.ninterp)
-        string = interp().astype(np.float64)
-        s = calculate_arc_length(string)
+        s = calculate_arc_length(interp())
         self.dist = s[-1]
         self.stepsize = self.dist / self.nnodes_min
 
@@ -83,7 +82,7 @@ class FreezingString:
         r_xyz, p_xyz = r_xyz.flatten(), p_xyz.flatten()
 
         interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp)
-        string = interp().astype(np.float64)
+        string = interp()
         s = calculate_arc_length(string)
 
         path = []

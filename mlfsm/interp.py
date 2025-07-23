@@ -46,7 +46,7 @@ class Linear(Interpolate):
         xyz1 = self.atoms1.get_positions()
         xyz2 = self.atoms2.get_positions()
 
-        def xab(f: float) -> NDArray[np.float64]:
+        def xab(f: float) -> NDArray[np.floating]:
             return np.array((1 - f) * xyz1 + f * xyz2, dtype=np.float64)
 
         fs = np.linspace(0, 1, self.ninterp)
@@ -63,10 +63,10 @@ class LST(Interpolate):
 
     def obj(
         self,
-        x_c: NDArray[np.float64],
+        x_c: NDArray[np.floating],
         f: float,
-        rab: Callable[[float], NDArray[np.float64]],
-        xab: Callable[[float], NDArray[np.float64]],
+        rab: Callable[[float], NDArray[np.floating]],
+        xab: Callable[[float], NDArray[np.floating]],
     ) -> float:
         """Objective function for LST interpolation."""
         x_c = x_c.reshape(-1, 3)
@@ -83,10 +83,10 @@ class LST(Interpolate):
         pdist_1 = pdist(xyz1)
         pdist_2 = pdist(xyz2)
 
-        def rab(f: float) -> NDArray[np.float64]:
+        def rab(f: float) -> NDArray[np.floating]:
             return np.array((1 - f) * pdist_1 + f * pdist_2, dtype=np.float64)
 
-        def xab(f: float) -> NDArray[np.float64]:
+        def xab(f: float) -> NDArray[np.floating]:
             return np.array((1 - f) * xyz1 + f * xyz2, dtype=np.float64)
 
         minimize_kwargs = {
@@ -117,8 +117,8 @@ class RIC(Interpolate):
         """Generate interpolated structures using linear interpolation in RIC."""
         xyz1 = self.atoms1.get_positions()
         xyz2 = self.atoms2.get_positions()
-        q1: NDArray[np.float64] = self.coords.q(xyz1)  # type ignore[no-untyped-call]
-        q2: NDArray[np.float64] = self.coords.q(xyz2)  # type ignore[no-untyped-call]
+        q1 = self.coords.q(xyz1)  # type ignore[no-untyped-call]
+        q2 = self.coords.q(xyz2)  # type ignore[no-untyped-call]
         dq = q2 - q1
         for i, name in enumerate(self.coords.keys):
             if ("tors" in name) and dq[i] > np.pi:
