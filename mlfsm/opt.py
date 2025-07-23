@@ -73,7 +73,7 @@ class CartesianOptimizer(Optimizer):
 
         Returns
         -------
-            Tuple[float, ndarray]: Energy and projected gradient.
+            tuple[float, ndarray]: Energy and projected gradient.
         """
         atoms.set_positions(xyz.reshape(-1, 3))
         atoms.calc = self.calc
@@ -184,7 +184,7 @@ class InternalsOptimizer(Optimizer):
 
         Returns
         -------
-            Tuple[float, ndarray]: Energy and projected gradient.
+            tuple[float, ndarray]: Energy and projected gradient.
         """
         assert self.coordsobj is not None, "Coordsobj must be initialized"
 
