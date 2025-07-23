@@ -25,6 +25,8 @@ from mlfsm.cos import FreezingString
 from mlfsm.opt import CartesianOptimizer, InternalsOptimizer, Optimizer
 from mlfsm.utils import load_xyz
 
+HERE = Path(__file__).parent
+
 
 def run_fsm(
     reaction_dir: Path | str,
@@ -42,7 +44,7 @@ def run_fsm(
     mult: int = 1,
     nt: int = 1,
     verbose: bool = False,
-    ckpt: Path = Path("schnet_fine_tuned.ckpt"),
+    ckpt: Path = HERE / "pre_trained_gnns/schnet_fine_tuned.ckpt",
     interpolate: bool = False,
     **kwargs,
 ):
@@ -170,12 +172,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--calculator",
         type=str,
-        default="qchem",
+        default="schnet",
         choices=["qchem", "xtb", "schnet", "torchmd", "uma", "aimnet2", "emt"],
         help="Calculator to use for energy and gradient evaluations",
     )
     parser.add_argument(
-        "--ckpt", type=Path, default="pre_trained_gnns/schnet_fine_tuned.ckpt", help="Checkpoint for calculator"
+        "--ckpt",
+        type=Path,
+        default=HERE / "pre_trained_gnns/schnet_fine_tuned.ckpt",
+        help="Checkpoint for calculator",
     )
     parser.add_argument("--chg", type=int, default=0, help="Charge of the system")
     parser.add_argument("--mult", type=int, default=1, help="Multiplicity of the system")
