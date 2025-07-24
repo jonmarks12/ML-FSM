@@ -17,55 +17,63 @@ Only the selected calculator needs to be installed in the Python environment.
 """
 
 import argparse
-import os
 import shutil
+from pathlib import Path
+from typing import Any
 
 from mlfsm.cos import FreezingString
-from mlfsm.opt import CartesianOptimizer, InternalsOptimizer
+from mlfsm.opt import CartesianOptimizer, InternalsOptimizer, Optimizer
 from mlfsm.utils import load_xyz
+
+HERE = Path(__file__).parent
 
 
 def run_fsm(
-    reaction_dir,
-    optcoords="cart",
-    interp="lst",
-    method="L-BFGS-B",
-    maxls=3,
-    maxiter=1,
-    dmax=0.3,
-    nnodes_min=10,
-    ninterp=100,
-    suffix=None,
-    calculator="qchem",
-    chg=0,
-    mult=1,
-    nt=1,
-    verbose=False,
-    ckpt="schnet_fine_tuned.ckpt",
-    interpolate=False,
+    reaction_dir: Path | str,
+    optcoords: str = "cart",
+    interp: str = "lst",
+    method: str = "L-BFGS-B",
+    maxls: int = 3,
+    maxiter: int = 1,
+    dmax: float = 0.3,
+    nnodes_min: int = 10,
+    ninterp: int = 100,
+    suffix: str | None = None,
+    calculator: str = "qchem",
+    chg: int = 0,
+    mult: int = 1,
+    nt: int = 1,
+    verbose: bool = False,
+    ckpt: Path = HERE / "pre_trained_gnns/schnet_fine_tuned.ckpt",
+    interpolate: bool = False,
     **kwargs,
 ):
     """Run the Freezing String Method on a given reaction with user specified parameters."""
+    reaction_dir = Path(reaction_dir)
+
     if suffix:
-        outdir = os.path.join(
-            reaction_dir,
-            f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_{suffix}",
+        outdir = reaction_dir / (
+            f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_"
+            f"maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_{suffix}"
         )
     else:
-        outdir = os.path.join(
-            reaction_dir,
-            f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}",
+        outdir = (
+            reaction_dir
+            / f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}"
         )
+
     if interpolate:
-        outdir = os.path.join(reaction_dir, f"interp_{interp}")
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-    else:
+        outdir = reaction_dir / f"interp_{interp}"
+
+    if outdir.is_dir():
         shutil.rmtree(outdir)
-        os.makedirs(outdir)
+
+    outdir.mkdir(parents=True, exist_ok=True)
 
     # Load structures
     reactant, product = load_xyz(reaction_dir)
+
+    calc: Any
 
     # Load calculator
     if calculator == "qchem":
@@ -117,7 +125,7 @@ def run_fsm(
 
         calc = SchNetCalculator(checkpoint=ckpt)
     else:
-        raise Exception(f"Unknown calculator {calculator}")
+        raise ValueError(f"Unknown calculator {calculator}")
 
     # Initialize FSM string
     string = FreezingString(reactant, product, nnodes_min, interp, ninterp)
@@ -125,13 +133,14 @@ def run_fsm(
         string.interpolate(outdir)
         return
 
+    optimizer: Optimizer
     # Choose optimizer
     if optcoords == "cart":
         optimizer = CartesianOptimizer(calc, method, maxiter, maxls, dmax)
     elif optcoords == "ric":
         optimizer = InternalsOptimizer(calc, method, maxiter, maxls, dmax)
     else:
-        raise Exception("Check optimizer coordinates")
+        raise ValueError("Check optimizer coordinates")
 
     # Run FSM
     while string.growing:
@@ -139,33 +148,45 @@ def run_fsm(
         string.optimize(optimizer)
         string.write(outdir)
 
-    print("Gradient calls:", string.ngrad)
+    print(f"Gradient calls: {string.ngrad}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("reaction_dir", type=str, help="absolute path to reaction")
-    parser.add_argument("--optcoords", type=str, default="cart", choices=["cart", "ric"])
-    parser.add_argument("--interp", type=str, default="ric", choices=["cart", "lst", "ric"])
-    parser.add_argument("--nnodes_min", type=int, default=18)
-    parser.add_argument("--ninterp", type=int, default=50)
-    parser.add_argument("--suffix", type=str, default=None)
-    parser.add_argument("--method", type=str, default="L-BFGS-B", choices=["L-BFGS-B", "CG"])
-    parser.add_argument("--maxls", type=int, default=3)
-    parser.add_argument("--maxiter", type=int, default=2)
-    parser.add_argument("--dmax", type=float, default=0.05)
+    parser.add_argument("reaction_dir", type=Path, help="absolute path to reaction")
+    parser.add_argument(
+        "--optcoords", type=str, default="cart", choices=["cart", "ric"], help="Coordinates for optimization"
+    )
+    parser.add_argument(
+        "--interp", type=str, default="ric", choices=["cart", "lst", "ric"], help="Interpolation method"
+    )
+    parser.add_argument("--nnodes_min", type=int, default=18, help="Minimum number of nodes in the FSM string")
+    parser.add_argument("--ninterp", type=int, default=50, help="Number of interpolation points between nodes")
+    parser.add_argument("--suffix", type=str, default=None, help="Suffix for output directory")
+    parser.add_argument(
+        "--method", type=str, default="L-BFGS-B", choices=["L-BFGS-B", "CG"], help="Optimization method"
+    )
+    parser.add_argument("--maxls", type=int, default=3, help="Maximum number of line search iterations")
+    parser.add_argument("--maxiter", type=int, default=2, help="Maximum number of optimization iterations")
+    parser.add_argument("--dmax", type=float, default=0.05, help="Maximum displacement for optimization steps")
     parser.add_argument(
         "--calculator",
         type=str,
-        default="qchem",
+        default="schnet",
         choices=["qchem", "xtb", "schnet", "torchmd", "uma", "aimnet2", "emt"],
+        help="Calculator to use for energy and gradient evaluations",
     )
-    parser.add_argument("--ckpt", type=str, default="gnns/schnet_fine_tuned.ckpt")
-    parser.add_argument("--chg", type=int, default=0)
-    parser.add_argument("--mult", type=int, default=1)
-    parser.add_argument("--nt", type=int, default=1)
-    parser.add_argument("--verbose", action="store_true", default=False)
-    parser.add_argument("--interpolate", action="store_true", default=False)
+    parser.add_argument(
+        "--ckpt",
+        type=Path,
+        default=HERE / "pre_trained_gnns/schnet_fine_tuned.ckpt",
+        help="Checkpoint for calculator",
+    )
+    parser.add_argument("--chg", type=int, default=0, help="Charge of the system")
+    parser.add_argument("--mult", type=int, default=1, help="Multiplicity of the system")
+    parser.add_argument("--nt", type=int, default=1, help="Number of threads for the calculator")
+    parser.add_argument("--verbose", action="store_true", help="Print verbose output")
+    parser.add_argument("--interpolate", action="store_true", help="Run interpolation instead of FSM")
 
     args = parser.parse_args()
     run_fsm(**vars(args))

@@ -8,6 +8,7 @@ Author: Jonah Marks
 Repository: https://github.com/jonmarks12/ML-FSM
 """
 
+from pathlib import Path
 from typing import Any, ClassVar
 
 import torch
@@ -76,7 +77,7 @@ class SchNetCalculator(Calculator):
 
     Attributes
     ----------
-        checkpoint (str): Path to the Lightning checkpoint.
+        checkpoint (Path | str): Path to the Lightning checkpoint.
         model (SchNetLightning): Loaded PyTorch Lightning model.
         device (torch.device): CPU or CUDA device for computation.
 
@@ -86,7 +87,7 @@ class SchNetCalculator(Calculator):
 
     implemented_properties: ClassVar[list[str]] = ["energy", "forces"]  # type: ignore [misc]
 
-    def __init__(self, checkpoint: str = "gnns/schnet_fine_tuned.ckpt") -> None:
+    def __init__(self, checkpoint: Path | str = "gnns/schnet_fine_tuned.ckpt") -> None:
         super().__init__()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.checkpoint = checkpoint

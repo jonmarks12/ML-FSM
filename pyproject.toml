@@ -34,7 +34,7 @@ lint = { cmd="ruff check . --fix" }
 types = { cmd="mypy ." }
 test = { cmd="pytest" }
 docs = { cmd="sphinx-build -b html docs/source docs/build" }
-all = { depends-on = ["fmt", "lint", "types", "test","docs"] }
+all = { depends-on = ["fmt", "lint", "types", "test", "docs"] }
 
 
 [tool.pixi.feature.dev.dependencies]
