@@ -54,7 +54,7 @@ def run_fsm(
     if suffix:
         outdir = reaction_dir / (
             f"fsm_interp_{interp}_method_{method}_maxls_{maxls}_"
-            "maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_{suffix}"
+            f"maxiter_{maxiter}_nnodesmin_{nnodes_min}_{calculator}_{suffix}"
         )
     else:
         outdir = (
