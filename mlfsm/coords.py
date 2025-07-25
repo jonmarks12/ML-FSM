@@ -91,7 +91,8 @@ class Coordinates:
     def x(self, xyz: NDArray[np.float64], qtarget: NDArray[np.float64]) -> NDArray[np.float64]:
         """Back-transform internal coordinate displacements to Cartesian updates."""
         xyz1 = xyz.copy()
-        for _i, name in enumerate(self.keys):
+
+        for name in self.keys:
             if "linearbnd" in name:
                 self.coords[name].reset(xyz1 * angs_to_bohr)
 
@@ -102,6 +103,7 @@ class Coordinates:
                 dq[i] += 2 * np.pi
             elif ("tors" in name) and dq[i] > np.pi:
                 dq[i] -= 2 * np.pi
+
         Bprim = self.b_matrix(xyz1)
         U = self.u_matrix(Bprim)
         B = U.T @ Bprim
@@ -138,11 +140,12 @@ class Coordinates:
                 if self.verbose:
                     print("R FUNCTION FAILED")
                 if self.verbose:
-                    print("Iteration %d" % niter)
+                    print(f"Iteration {niter}")
                 if self.verbose:
-                    print("\tRMS(dx) = %10.5e" % rms_dx)
+                    print(f"\tRMS(dx) = {rms_dx:10.5e}")
                 if self.verbose:
-                    print("\tRMS(dq) = %10.5e" % rms_dq)
+                    print(f"\tRMS(dq) = {rms_dq:10.5e}")
+
                 return np.array(xyz_backup, dtype=np.float64)
 
             if rms_dq < dq_min:
