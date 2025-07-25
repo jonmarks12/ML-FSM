@@ -193,9 +193,8 @@ class Redundant(Coordinates):
 
     def get_fragments(self, A: NDArray[np.int_]) -> List[NDArray[np.int_]]:  # noqa: N803
         """Return list of fragments as connected components in adjacency matrix."""
-        G: Any = nx.to_networkx_graph(A)
-        frags = [np.array(list(d)) for d in nx.connected_components(G)]
-        return frags
+        G: nx.Graph = nx.to_networkx_graph(A)
+        return [np.array(list(d)) for d in nx.connected_components(G)]
 
     def connectivity(
         self, atoms: Atoms
@@ -203,7 +202,7 @@ class Redundant(Coordinates):
         """Compute connectivity matrices from atomic positions."""
         # this is done in Angstrom
         z = atoms.get_atomic_numbers()
-        natoms: int = len(z)
+        natoms = len(z)
 
         # compute covalent bonds
         conn: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
@@ -217,7 +216,7 @@ class Redundant(Coordinates):
 
         # find all fragments
         frags = self.get_fragments(conn)
-        nfrags: int = len(frags)
+        nfrags = len(frags)
 
         conn_frag: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
         conn_frag_aux: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
@@ -304,7 +303,7 @@ class Redundant(Coordinates):
         # bonds can be: covalent, interfragment, interfragment aux, or hbond
         for i, j in itertools.combinations(range(natoms), 2):
             if total_conn[i, j] or conn_frag_aux[i, j]:
-                coords["stre_{}_{}".format(i, j)] = Distance(i, j)
+                coords[f"stre_{i}_{j}"] = Distance(i, j)
 
         # angles can be: covalent, interfragment, or hbond
         for i, j in itertools.permutations(range(natoms), 2):
@@ -316,10 +315,10 @@ class Redundant(Coordinates):
                             continue
                         ang = Angle(i, j, k)
                         if np.cos(ang.value(xyzb)) < angle_thresh:
-                            coords["linearbnd_{}_{}_{}_0".format(i, j, k)] = LinearAngle(i, j, k, 0)
-                            coords["linearbnd_{}_{}_{}_1".format(i, j, k)] = LinearAngle(i, j, k, 1)
+                            coords[f"linearbnd_{i}_{j}_{k}_0"] = LinearAngle(i, j, k, 0)
+                            coords[f"linearbnd_{i}_{j}_{k}_1"] = LinearAngle(i, j, k, 1)
                         else:
-                            coords["bend_{}_{}_{}".format(i, j, k)] = ang
+                            coords[f"bend_{i}_{j}_{k}"] = ang
 
         # torsions can be: covalent, interfragment, or hbond
         for i, j in itertools.permutations(range(natoms), 2):
@@ -337,14 +336,11 @@ class Redundant(Coordinates):
                                     continue
                                 if np.abs(np.cos(ang2.value(xyzb))) > np.abs(angle_thresh):
                                     continue
-                                coords["tors_{}_{}_{}_{}".format(i, j, k, l)] = Dihedral(i, j, k, l)
+                                coords[f"tors_{i}_{j}_{k}_{l}"] = Dihedral(i, j, k, l)
 
         # out-of-plane angle
         for b in range(natoms):
-            b_neighbors = np.arange(
-                natoms,
-            )
-            b_neighbors = b_neighbors[total_conn[b] > 0]
+            b_neighbors = np.arange(natoms)[total_conn[b] > 0]
             for a in b_neighbors:
                 for c in b_neighbors:
                     for d in b_neighbors:
@@ -357,7 +353,7 @@ class Redundant(Coordinates):
                                 if np.abs(np.cos(ang2.value(xyzb))) > np.abs(angle_thresh):
                                     continue
                                 if np.abs(np.dot(ang1.normal_vector(xyzb), ang2.normal_vector(xyzb))) > angle_thresh:
-                                    coords["oop_{}_{}_{}_{}".format(b, i, j, k)] = OutOfPlane(b, i, j, k)
+                                    coords[f"oop_{b}_{i}_{j}_{k}"] = OutOfPlane(b, i, j, k)
                                     if natoms > 4:  # noqa: PLR2004
                                         break
 
