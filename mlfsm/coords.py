@@ -41,7 +41,6 @@ class Coordinates:
             self.dqprint(self.atoms1, self.atoms2)
         elif verbose:
             self.qprint(self.atoms1)
-        # self.dqprint(self.atoms1, self.atoms2)
 
     def construct(self) -> Dict[str, Any]:
         """Construct the coordinate representation for a given atom set."""
@@ -58,21 +57,21 @@ class Coordinates:
     def q(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Return coordinate values in from Cartesian positions."""
         xyzb = xyz * angs_to_bohr
-        return np.array([coord.value(xyzb) for coord in self.coords.values()], dtype=np.float64)
+        # return np.array([coord.value(xyzb) for coord in self.coords.values()], dtype=np.float64)
+        return np.fromiter((coord.value(xyzb) for coord in self.coords.values()), dtype=np.float64)
 
     def dqprint(self, atoms1: Atoms, atoms2: Atoms) -> None:
         """Print differences in internal coordinates between two structures."""
         q1 = self.q(atoms1.get_positions())
         q2 = self.q(atoms2.get_positions())
-        dq = q2 - q1
-        print("\n%15s%15s" % ("Coordinate", "Value"))
-        for i, (name, _coord) in enumerate(self.coords.items()):
+        print(f"\n{'Coordinate':15}{'Value':15}")
+        for name, q1_i, q2_i, dq_i in zip(self.keys, q1, q2, (q2 - q1), strict=True):
             star = ""
-            if ("bend" in name or "tors" in name or "oop" in name) and dq[i] < -np.pi:
+            if ("bend" in name or "tors" in name or "oop" in name) and dq_i < -np.pi:
                 star = "*"
-            elif ("bend" in name or "tors" in name or "oop" in name) and dq[i] > np.pi:
+            elif ("bend" in name or "tors" in name or "oop" in name) and dq_i > np.pi:
                 star = "*"
-            print("%15s = %15.8f %15.8f %15.8f %s" % (name, q1[i], q2[i], dq[i], star))
+            print(f"{name:15s} = {q1_i:15.8f} {q2_i:15.8f} {dq_i:15.8f} {star}")
 
     def b_matrix(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Construct the B-matrix for internal coordinates."""
@@ -87,8 +86,7 @@ class Coordinates:
     def u_matrix(self, Bprim: NDArray[np.float64]) -> NDArray[np.float64]:  # noqa: N803
         """Compute projection matrix U from the B-matrix."""
         evals, evecs = np.linalg.eigh(Bprim @ Bprim.T)
-        U = evecs[:, evals > EIGENVAL_CUTOFF]
-        return U
+        return evecs[:, evals > EIGENVAL_CUTOFF]
 
     def x(self, xyz: NDArray[np.float64], qtarget: NDArray[np.float64]) -> NDArray[np.float64]:
         """Back-transform internal coordinate displacements to Cartesian updates."""
