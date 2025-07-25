@@ -162,9 +162,9 @@ class Cartesian(Coordinates):
         coords = {}
         natoms = len(self.atoms1.numbers)
         for i in range(natoms):
-            coords["cartx_{}".format(i)] = CartesianX(i, w=1.0)
-            coords["carty_{}".format(i)] = CartesianY(i, w=1.0)
-            coords["cartz_{}".format(i)] = CartesianZ(i, w=1.0)
+            coords[f"cartx_{i}"] = CartesianX(i, w=1.0)
+            coords[f"carty_{i}"] = CartesianY(i, w=1.0)
+            coords[f"cartz_{i}"] = CartesianZ(i, w=1.0)
         return coords
 
 
