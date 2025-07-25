@@ -175,17 +175,11 @@ class Redundant(Coordinates):
         """Check if distance between two atoms is significant (non-zero within tolerance)."""
         v0 = A - B
         n = np.maximum(1e-12, v0.dot(v0))
-        if n < eps:
-            return False
-        else:
-            return True
+        return n >= eps
 
     def checkangle(self, A: NDArray[np.float64], B: NDArray[np.float64], C: NDArray[np.float64]) -> bool:  # noqa: N803
         """Check if angle defined by three atoms is physically valid."""
-        if self.checkstre(A, B) and self.checkstre(B, C):
-            return True
-        else:
-            return False
+        return self.checkstre(A, B) and self.checkstre(B, C)
 
     def checktors(
         self,
@@ -195,13 +189,7 @@ class Redundant(Coordinates):
         D: NDArray[np.float64],  # noqa: N803
     ) -> bool:
         """Check if torsion angle defined by four atoms is physically valid."""
-        check1 = self.checkstre(A, B)
-        check2 = self.checkstre(B, C)
-        check3 = self.checkstre(C, D)
-        if check1 and check2 and check3:
-            return True
-        else:
-            return False
+        return self.checkstre(A, B) and self.checkstre(B, C) and self.checkstre(C, D)
 
     def get_fragments(self, A: NDArray[np.int_]) -> List[NDArray[np.int_]]:  # noqa: N803
         """Return list of fragments as connected components in adjacency matrix."""
