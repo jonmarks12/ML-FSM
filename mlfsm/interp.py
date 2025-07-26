@@ -50,7 +50,8 @@ class Linear(Interpolate):
             return np.array((1 - f) * xyz1 + f * xyz2, dtype=np.float64)
 
         fs = np.linspace(0, 1, self.ninterp)
-        return np.fromiter((xab(f).flatten() for f in (fs)), dtype=np.float32)
+        # build a 2D float32 array of shape (ninterp, natoms*3)
+        return np.array([xab(f).flatten() for f in fs], dtype=np.float32)
 
 
 class LST(Interpolate):

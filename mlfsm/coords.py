@@ -41,7 +41,6 @@ class Coordinates:
             self.dqprint(self.atoms1, self.atoms2)
         elif verbose:
             self.qprint(self.atoms1)
-        # self.dqprint(self.atoms1, self.atoms2)
 
     def construct(self) -> Dict[str, Any]:
         """Construct the coordinate representation for a given atom set."""
@@ -58,21 +57,21 @@ class Coordinates:
     def q(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Return coordinate values in from Cartesian positions."""
         xyzb = xyz * angs_to_bohr
-        return np.array([coord.value(xyzb) for coord in self.coords.values()], dtype=np.float64)
+        # return np.array([coord.value(xyzb) for coord in self.coords.values()], dtype=np.float64)
+        return np.fromiter((coord.value(xyzb) for coord in self.coords.values()), dtype=np.float64)
 
     def dqprint(self, atoms1: Atoms, atoms2: Atoms) -> None:
         """Print differences in internal coordinates between two structures."""
         q1 = self.q(atoms1.get_positions())
         q2 = self.q(atoms2.get_positions())
-        dq = q2 - q1
-        print("\n%15s%15s" % ("Coordinate", "Value"))
-        for i, (name, _coord) in enumerate(self.coords.items()):
+        print(f"\n{'Coordinate':15}{'Value':15}")
+        for name, q1_i, q2_i, dq_i in zip(self.keys, q1, q2, (q2 - q1), strict=True):
             star = ""
-            if ("bend" in name or "tors" in name or "oop" in name) and dq[i] < -np.pi:
+            if ("bend" in name or "tors" in name or "oop" in name) and dq_i < -np.pi:
                 star = "*"
-            elif ("bend" in name or "tors" in name or "oop" in name) and dq[i] > np.pi:
+            elif ("bend" in name or "tors" in name or "oop" in name) and dq_i > np.pi:
                 star = "*"
-            print("%15s = %15.8f %15.8f %15.8f %s" % (name, q1[i], q2[i], dq[i], star))
+            print(f"{name:15s} = {q1_i:15.8f} {q2_i:15.8f} {dq_i:15.8f} {star}")
 
     def b_matrix(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Construct the B-matrix for internal coordinates."""
@@ -87,13 +86,13 @@ class Coordinates:
     def u_matrix(self, Bprim: NDArray[np.float64]) -> NDArray[np.float64]:  # noqa: N803
         """Compute projection matrix U from the B-matrix."""
         evals, evecs = np.linalg.eigh(Bprim @ Bprim.T)
-        U = evecs[:, evals > EIGENVAL_CUTOFF]
-        return U
+        return evecs[:, evals > EIGENVAL_CUTOFF]
 
     def x(self, xyz: NDArray[np.float64], qtarget: NDArray[np.float64]) -> NDArray[np.float64]:
         """Back-transform internal coordinate displacements to Cartesian updates."""
         xyz1 = xyz.copy()
-        for _i, name in enumerate(self.keys):
+
+        for name in self.keys:
             if "linearbnd" in name:
                 self.coords[name].reset(xyz1 * angs_to_bohr)
 
@@ -104,6 +103,7 @@ class Coordinates:
                 dq[i] += 2 * np.pi
             elif ("tors" in name) and dq[i] > np.pi:
                 dq[i] -= 2 * np.pi
+
         Bprim = self.b_matrix(xyz1)
         U = self.u_matrix(Bprim)
         B = U.T @ Bprim
@@ -140,11 +140,12 @@ class Coordinates:
                 if self.verbose:
                     print("R FUNCTION FAILED")
                 if self.verbose:
-                    print("Iteration %d" % niter)
+                    print(f"Iteration {niter}")
                 if self.verbose:
-                    print("\tRMS(dx) = %10.5e" % rms_dx)
+                    print(f"\tRMS(dx) = {rms_dx:10.5e}")
                 if self.verbose:
-                    print("\tRMS(dq) = %10.5e" % rms_dq)
+                    print(f"\tRMS(dq) = {rms_dq:10.5e}")
+
                 return np.array(xyz_backup, dtype=np.float64)
 
             if rms_dq < dq_min:
@@ -161,9 +162,9 @@ class Cartesian(Coordinates):
         coords = {}
         natoms = len(self.atoms1.numbers)
         for i in range(natoms):
-            coords["cartx_{}".format(i)] = CartesianX(i, w=1.0)
-            coords["carty_{}".format(i)] = CartesianY(i, w=1.0)
-            coords["cartz_{}".format(i)] = CartesianZ(i, w=1.0)
+            coords[f"cartx_{i}"] = CartesianX(i, w=1.0)
+            coords[f"carty_{i}"] = CartesianY(i, w=1.0)
+            coords[f"cartz_{i}"] = CartesianZ(i, w=1.0)
         return coords
 
 
@@ -174,17 +175,11 @@ class Redundant(Coordinates):
         """Check if distance between two atoms is significant (non-zero within tolerance)."""
         v0 = A - B
         n = np.maximum(1e-12, v0.dot(v0))
-        if n < eps:
-            return False
-        else:
-            return True
+        return n >= eps
 
     def checkangle(self, A: NDArray[np.float64], B: NDArray[np.float64], C: NDArray[np.float64]) -> bool:  # noqa: N803
         """Check if angle defined by three atoms is physically valid."""
-        if self.checkstre(A, B) and self.checkstre(B, C):
-            return True
-        else:
-            return False
+        return self.checkstre(A, B) and self.checkstre(B, C)
 
     def checktors(
         self,
@@ -194,19 +189,12 @@ class Redundant(Coordinates):
         D: NDArray[np.float64],  # noqa: N803
     ) -> bool:
         """Check if torsion angle defined by four atoms is physically valid."""
-        check1 = self.checkstre(A, B)
-        check2 = self.checkstre(B, C)
-        check3 = self.checkstre(C, D)
-        if check1 and check2 and check3:
-            return True
-        else:
-            return False
+        return self.checkstre(A, B) and self.checkstre(B, C) and self.checkstre(C, D)
 
     def get_fragments(self, A: NDArray[np.int_]) -> List[NDArray[np.int_]]:  # noqa: N803
         """Return list of fragments as connected components in adjacency matrix."""
-        G: Any = nx.to_networkx_graph(A)
-        frags = [np.array(list(d)) for d in nx.connected_components(G)]
-        return frags
+        G: nx.Graph = nx.to_networkx_graph(A)
+        return [np.array(list(d)) for d in nx.connected_components(G)]
 
     def connectivity(
         self, atoms: Atoms
@@ -214,7 +202,7 @@ class Redundant(Coordinates):
         """Compute connectivity matrices from atomic positions."""
         # this is done in Angstrom
         z = atoms.get_atomic_numbers()
-        natoms: int = len(z)
+        natoms = len(z)
 
         # compute covalent bonds
         conn: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
@@ -228,7 +216,7 @@ class Redundant(Coordinates):
 
         # find all fragments
         frags = self.get_fragments(conn)
-        nfrags: int = len(frags)
+        nfrags = len(frags)
 
         conn_frag: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
         conn_frag_aux: NDArray[np.int64] = np.zeros((natoms, natoms), dtype=np.int64)
@@ -315,7 +303,7 @@ class Redundant(Coordinates):
         # bonds can be: covalent, interfragment, interfragment aux, or hbond
         for i, j in itertools.combinations(range(natoms), 2):
             if total_conn[i, j] or conn_frag_aux[i, j]:
-                coords["stre_{}_{}".format(i, j)] = Distance(i, j)
+                coords[f"stre_{i}_{j}"] = Distance(i, j)
 
         # angles can be: covalent, interfragment, or hbond
         for i, j in itertools.permutations(range(natoms), 2):
@@ -327,10 +315,10 @@ class Redundant(Coordinates):
                             continue
                         ang = Angle(i, j, k)
                         if np.cos(ang.value(xyzb)) < angle_thresh:
-                            coords["linearbnd_{}_{}_{}_0".format(i, j, k)] = LinearAngle(i, j, k, 0)
-                            coords["linearbnd_{}_{}_{}_1".format(i, j, k)] = LinearAngle(i, j, k, 1)
+                            coords[f"linearbnd_{i}_{j}_{k}_0"] = LinearAngle(i, j, k, 0)
+                            coords[f"linearbnd_{i}_{j}_{k}_1"] = LinearAngle(i, j, k, 1)
                         else:
-                            coords["bend_{}_{}_{}".format(i, j, k)] = ang
+                            coords[f"bend_{i}_{j}_{k}"] = ang
 
         # torsions can be: covalent, interfragment, or hbond
         for i, j in itertools.permutations(range(natoms), 2):
@@ -348,14 +336,11 @@ class Redundant(Coordinates):
                                     continue
                                 if np.abs(np.cos(ang2.value(xyzb))) > np.abs(angle_thresh):
                                     continue
-                                coords["tors_{}_{}_{}_{}".format(i, j, k, l)] = Dihedral(i, j, k, l)
+                                coords[f"tors_{i}_{j}_{k}_{l}"] = Dihedral(i, j, k, l)
 
         # out-of-plane angle
         for b in range(natoms):
-            b_neighbors = np.arange(
-                natoms,
-            )
-            b_neighbors = b_neighbors[total_conn[b] > 0]
+            b_neighbors = np.arange(natoms)[total_conn[b] > 0]
             for a in b_neighbors:
                 for c in b_neighbors:
                     for d in b_neighbors:
@@ -368,7 +353,7 @@ class Redundant(Coordinates):
                                 if np.abs(np.cos(ang2.value(xyzb))) > np.abs(angle_thresh):
                                     continue
                                 if np.abs(np.dot(ang1.normal_vector(xyzb), ang2.normal_vector(xyzb))) > angle_thresh:
-                                    coords["oop_{}_{}_{}_{}".format(b, i, j, k)] = OutOfPlane(b, i, j, k)
+                                    coords[f"oop_{b}_{i}_{j}_{k}"] = OutOfPlane(b, i, j, k)
                                     if natoms > 4:  # noqa: PLR2004
                                         break
 
@@ -390,7 +375,7 @@ class Redundant(Coordinates):
         tors_thresh = np.abs(np.cos(175.0 * np.pi / 180.0))
 
         # Check both ends for ill-defined torsions
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         to_add: Dict[str, Any] = {}
         xyzb1 = self.atoms1.get_positions() * angs_to_bohr
@@ -418,7 +403,7 @@ class Redundant(Coordinates):
 
         # Remove angle coordinates displaced greater than pi or oop greater than pi/2
         self.coords = coords
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         to_add = {}
         q1 = self.q(self.atoms1.get_positions())
@@ -455,10 +440,9 @@ class Redundant(Coordinates):
             coords[name] = coord
 
         # remove oop bends containing broken bonding centers
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         oop_keys = [i for i in keys if "oop" in i]
-        tors_keys = [i for i in keys if "tors" in i]
         for oopk in oop_keys:
             coord = coords[oopk]
             if not ((oopk in coords1.keys()) and (oopk in coords2.keys())):
@@ -468,7 +452,7 @@ class Redundant(Coordinates):
         for k in set(to_delete):
             del coords[k]
 
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         natoms = len(self.atoms1)
         tors_keys = [i for i in keys if "tors" in i]
         ntors = len(tors_keys)
@@ -477,19 +461,22 @@ class Redundant(Coordinates):
             xyz2 = self.atoms2.get_positions()
             xyzb1 = xyz1 * angs_to_bohr
             xyzb2 = xyz2 * angs_to_bohr
+
             for i0, j0, k0, l0 in list(itertools.permutations(range(natoms), 4)):
                 check1 = self.checktors(xyz1[i0], xyz1[j0], xyz1[k0], xyz1[l0])
                 check2 = self.checktors(xyz2[i0], xyz2[j0], xyz2[k0], xyz2[l0])
-                check: bool = check1 and check2
+                check = check1 and check2
                 if not check:
                     continue
+
                 unique_perms = [p for p in itertools.permutations([i0, j0, k0, l0], 4) if p[-1] > p[0]]
                 for a, b, c, d in unique_perms:
                     ang1 = Angle(a, b, c)
                     ang2 = Angle(b, c, d)
                     tors = Dihedral(a, b, c, d)
+
                     if np.cos(tors.value(xyzb1)) < -tors_thresh or np.cos(tors.value(xyzb2)) < -tors_thresh:
-                        to_add["stre_{}_{}".format(a, d)] = Distance(a, d)
+                        to_add[f"stre_{a}_{d}"] = Distance(a, d)
                         continue
                     if np.abs(np.cos(ang1.value(xyzb1))) > tors_thresh:
                         continue
@@ -499,12 +486,14 @@ class Redundant(Coordinates):
                         continue
                     if np.abs(np.cos(ang2.value(xyzb2))) > tors_thresh:
                         continue
-                    self.coords["tors_{}_{}_{}_{}".format(a, b, c, d)] = Dihedral(a, b, c, d)
+
+                    self.coords[f"tors_{a}_{b}_{c}_{d}"] = Dihedral(a, b, c, d)
                     ntors += 1
+
                 if ntors > 0:
                     break
+
         if ntors == 0 and natoms >= MIN_ATOMS_FOR_TORSION:
-            coords = {}
-            for i, j in itertools.combinations(range(natoms), 2):
-                coords["stre_{}_{}".format(i, j)] = Distance(i, j)
+            coords = {f"stre_{i}_{j}": Distance(i, j) for i, j in itertools.combinations(range(natoms), 2)}
+
         return coords
