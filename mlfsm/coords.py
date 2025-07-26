@@ -375,7 +375,7 @@ class Redundant(Coordinates):
         tors_thresh = np.abs(np.cos(175.0 * np.pi / 180.0))
 
         # Check both ends for ill-defined torsions
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         to_add: Dict[str, Any] = {}
         xyzb1 = self.atoms1.get_positions() * angs_to_bohr
@@ -403,7 +403,7 @@ class Redundant(Coordinates):
 
         # Remove angle coordinates displaced greater than pi or oop greater than pi/2
         self.coords = coords
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         to_add = {}
         q1 = self.q(self.atoms1.get_positions())
@@ -440,10 +440,9 @@ class Redundant(Coordinates):
             coords[name] = coord
 
         # remove oop bends containing broken bonding centers
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         to_delete = []
         oop_keys = [i for i in keys if "oop" in i]
-        tors_keys = [i for i in keys if "tors" in i]
         for oopk in oop_keys:
             coord = coords[oopk]
             if not ((oopk in coords1.keys()) and (oopk in coords2.keys())):
@@ -453,7 +452,7 @@ class Redundant(Coordinates):
         for k in set(to_delete):
             del coords[k]
 
-        keys = list(coords.keys()).copy()
+        keys = list(coords.keys())
         natoms = len(self.atoms1)
         tors_keys = [i for i in keys if "tors" in i]
         ntors = len(tors_keys)
@@ -462,19 +461,22 @@ class Redundant(Coordinates):
             xyz2 = self.atoms2.get_positions()
             xyzb1 = xyz1 * angs_to_bohr
             xyzb2 = xyz2 * angs_to_bohr
+
             for i0, j0, k0, l0 in list(itertools.permutations(range(natoms), 4)):
                 check1 = self.checktors(xyz1[i0], xyz1[j0], xyz1[k0], xyz1[l0])
                 check2 = self.checktors(xyz2[i0], xyz2[j0], xyz2[k0], xyz2[l0])
-                check: bool = check1 and check2
+                check = check1 and check2
                 if not check:
                     continue
+
                 unique_perms = [p for p in itertools.permutations([i0, j0, k0, l0], 4) if p[-1] > p[0]]
                 for a, b, c, d in unique_perms:
                     ang1 = Angle(a, b, c)
                     ang2 = Angle(b, c, d)
                     tors = Dihedral(a, b, c, d)
+
                     if np.cos(tors.value(xyzb1)) < -tors_thresh or np.cos(tors.value(xyzb2)) < -tors_thresh:
-                        to_add["stre_{}_{}".format(a, d)] = Distance(a, d)
+                        to_add[f"stre_{a}_{d}"] = Distance(a, d)
                         continue
                     if np.abs(np.cos(ang1.value(xyzb1))) > tors_thresh:
                         continue
@@ -484,12 +486,14 @@ class Redundant(Coordinates):
                         continue
                     if np.abs(np.cos(ang2.value(xyzb2))) > tors_thresh:
                         continue
-                    self.coords["tors_{}_{}_{}_{}".format(a, b, c, d)] = Dihedral(a, b, c, d)
+
+                    self.coords[f"tors_{a}_{b}_{c}_{d}"] = Dihedral(a, b, c, d)
                     ntors += 1
+
                 if ntors > 0:
                     break
+
         if ntors == 0 and natoms >= MIN_ATOMS_FOR_TORSION:
-            coords = {}
-            for i, j in itertools.combinations(range(natoms), 2):
-                coords["stre_{}_{}".format(i, j)] = Distance(i, j)
+            coords = {f"stre_{i}_{j}": Distance(i, j) for i, j in itertools.combinations(range(natoms), 2)}
+
         return coords
