@@ -20,10 +20,10 @@ jobs:
           pixi-version: "latest"
 
       - name: Install dependencies with Pixi
-        run: pixi install
+        run: pixi install --locked --manifest-path pyproject.toml
 
       - name: Run tests with coverage
-        run: pixi run coverage
+        run: pixi run --manifest-path pyproject.toml coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
