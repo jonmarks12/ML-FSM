@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -20,8 +21,9 @@ def test_fsm_script_diels_alder() -> None:
         env = os.environ.copy()
         env["PYTHONPATH"] = os.getcwd()
         # Run the FSM script
+
         result = subprocess.run(
-            ["pixi", "run", "python", script_path, rxn_dir, "--calculator", "emt", "--suffix", "test_fsm_script"],
+            [sys.executable, str(script_path), str(rxn_dir), "--calculator", "emt", "--suffix", "test_fsm_script"],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

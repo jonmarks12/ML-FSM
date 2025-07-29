@@ -6,6 +6,8 @@
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jonmarks12/ML-FSM/test.yml?branch=main&logo=github-actions)](https://github.com/jonmarks12/ML-FSM/actions/)
 [![Documentation Status](https://readthedocs.org/projects/ml-fsm/badge/?version=latest)](https://ml-fsm.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/jonmarks12/ML-FSM/branch/dev/graph/badge.svg)](https://codecov.io/gh/jonmarks12/ML-FSM)
+
 
 
 

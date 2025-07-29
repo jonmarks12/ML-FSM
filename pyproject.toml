@@ -20,6 +20,7 @@ channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
+python = "3.11"
 
 [tool.pixi.pypi-dependencies]
 mlfsm = { path = ".", editable = true }
@@ -33,6 +34,7 @@ fmt = { cmd="ruff format ." }
 lint = { cmd="ruff check . --fix" }
 types = { cmd="mypy ." }
 test = { cmd="pytest" }
+coverage = { cmd = "pytest --cov=mlfsm --cov-report=xml" }
 docs = { cmd="sphinx-build -b html docs/source docs/build" }
 all = { depends-on = ["fmt", "lint", "types", "test", "docs"] }
 
