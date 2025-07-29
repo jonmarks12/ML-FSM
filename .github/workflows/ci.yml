@@ -19,6 +19,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Pixi CLI
+        run: pip install pixi
+
       - name: Install your package & test deps
         run: |
           pip install -e .
