@@ -22,6 +22,9 @@ jobs:
       - name: Install Pixi CLI
         run: pip install pixi
 
+      - name: Migrate Pixi database
+        run: pixi migrate
+
       - name: Install your package & test deps
         run: |
           pip install -e .
