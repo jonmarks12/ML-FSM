@@ -11,30 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug:repo root listing
-        run: ls -la
-
-      - name: Install Pixi
-        uses: prefix-dev/setup-pixi@v0.5.1
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          pixi-version: "latest"
+          python-version: '3.11'
 
-      - name: Debug:pixi version
-        run: pixi --version
-
-      - name: Debug:pixi info
-        run: pixi info
-
-      - name: Install dependencies with Pixi (verbose)
+      - name: Install your package & test deps
         run: |
-          set -x
-           pixi install --locked --manifest-path pyproject.toml
+          pip install -e .
+          pip install pytest pytest-cov
 
       - name: Run tests with coverage
-        run: pixi run --manifest-path pyproject.toml coverage
+        run: |
+          pytest --cov=mlfsm --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
