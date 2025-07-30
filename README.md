@@ -32,19 +32,23 @@ Note the EMT calculator should only be used for quick demonstrations/tests.
 
 ## Tutorials 
 
-1. Interactive Notebook: Diels Alder with the AIMNet2
-
-    A google colab notebook example can be found at examples/FSM_Colab_AIMNet2.ipynb
-
+1. A Google Colab notebook example is available at:
+```
+examples/FSM_Colab_AIMNet2.ipynb
+```
+This notebook demonstrates how to run a full FSM calculation on a Diels–Alder reaction using the AIMNet2 potential.
 
 3. Example Script
 
-    The example script, ```examples/fsm_examples.py``` is a flexible script supporting most ML-FSM functionality. To run it:
+The script:
 ```
-python examples/fsm_example.py data/sharada/06_diels_alder/ --calculator <ase calculator> --<other argparse arguments>
+examples/fsm_example.py
 ```
+is a comprehensive and flexible tool that supports most ML-FSM functionality. 
+
 Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
+3. Some ML potentials do not offer a native ASE interface. To accommodate these, two minimal examples of custom ```ase.Calculator``` wrappers are provided in the ```examples/``` folder. These serve as templates for integrating arbitrary NNPs with ML-FSM   
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
 
