@@ -11,7 +11,7 @@
 
 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/main/examples/FSM_GNN_Colab_Example.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jonmarks12/ML-FSM/blob/dev/examples/FSM_Colab_AIMNet2.ipynb)
 
 This repository provides an implementation of the Freezing String Method (FSM) for double-ended transition state searches with internal coordinates interpolation with ML-based potentials.
 
@@ -24,17 +24,31 @@ git clone https://github.com/jonmarks12/ML-FSM.git
 cd ML-FSM
 pip install .
 ```
-
-## Example
-
-To run the FSM with default parameters and the ASE EMT calculator on a Diels Alder reaction run:
-```python
+Perform a test run with default parameters and the EMT calculator:
+```
 python examples/fsm_example.py data/sharada/06_diels_alder/ --calculator emt
 ```
+Note the EMT calculator should only be used for quick demonstrations/tests.
+
+## Tutorials 
+
+1. A Google Colab notebook example is available at:
+```
+examples/FSM_Colab_AIMNet2.ipynb
+```
+This notebook demonstrates how to run a full FSM calculation on a Diels–Alder reaction using the AIMNet2 potential.
+
+3. Example Script
+
+The script:
+```
+examples/fsm_example.py
+```
+is a comprehensive and flexible tool that supports most ML-FSM functionality. 
+
 Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
-To use custom calculators setup your own script, a basic example script/notebook is shown in examples/FSM_GNN_Colab_Example.ipynb
-
+3. Some ML potentials do not offer a native ASE interface. To accommodate these, two minimal examples of custom ```ase.Calculator``` wrappers are provided in the ```examples/``` folder. These serve as templates for integrating arbitrary NNPs with ML-FSM   
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
 
