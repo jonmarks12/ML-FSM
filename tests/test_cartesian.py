@@ -9,13 +9,13 @@ from pathlib import Path
 
 
 def test_fsm_script_diels_alder() -> None:
-    """Run fsm_example.py on the Diels-Alder example default parameters with the EMT calculator."""
-    example_dir = Path("examples/data/06_diels_alder")
+    """Run fsm_example.py on the Hexadiene example with CG and LST using the EMT calculator."""
+    example_dir = Path("examples/data/07_hexadiene")
     script_path = Path("examples/fsm_example.py")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Copy the example into a temporary directory
-        rxn_dir = Path(tmpdir) / "06_diels_alder"
+        rxn_dir = Path(tmpdir) / "07_hexadiene"
         shutil.copytree(example_dir, rxn_dir)
 
         env = os.environ.copy()
@@ -23,7 +23,19 @@ def test_fsm_script_diels_alder() -> None:
         # Run the FSM script
 
         result = subprocess.run(
-            [sys.executable, str(script_path), str(rxn_dir), "--calculator", "emt", "--suffix", "test_fsm_script"],
+            [
+                sys.executable,
+                str(script_path),
+                str(rxn_dir),
+                "--calculator",
+                "emt",
+                "--interp",
+                "lst",
+                "--method",
+                "CG",
+                "--suffix",
+                "test_fsm_script",
+            ],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
