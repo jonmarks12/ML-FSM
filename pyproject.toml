@@ -2,7 +2,7 @@
 name = "mlfsm"
 description = "python implementation of the Freezing String Method"
 license = {file = "LICENSE"}
-version = "0.0.1"
+version = "1.0.0"
 readme = "README.md"
 keywords = []
 authors = [{name = "Jonah Marks and Joe Gomes"}]
