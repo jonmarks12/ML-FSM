@@ -120,10 +120,6 @@ def run_fsm(
 
         dev = "cuda" if torch.cuda.is_available() else "cpu"
         calc = mace_off(model="large", device=dev)
-    elif calculator == "schnet":
-        from custom_calculator_schnet import SchNetCalculator
-
-        calc = SchNetCalculator(checkpoint=ckpt)
     else:
         raise ValueError(f"Unknown calculator {calculator}")
 
