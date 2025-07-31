@@ -46,9 +46,9 @@ examples/fsm_example.py
 ```
 is a comprehensive and flexible tool that supports most ML-FSM functionality. 
 
-Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [SchNet](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.nn.models.SchNet.html), [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
+Note: Users are responsible for installing their desired quantum chemistry backend, current calculators supported in fsm_example.py are [AIMNet2](https://github.com/isayevlab/AIMNet2), [MACEOFF23](https://github.com/ACEsuit/mace-off), [FAIR UMA](https://github.com/facebookresearch/fairchem), [TensorNet](https://github.com/torchmd/torchmd-net), [xTB](https://github.com/grimme-lab/xtb), [QChem](https://www.q-chem.com).
 
-3. Some ML potentials do not offer a native ASE interface. To accommodate these, two minimal examples of custom ```ase.Calculator``` wrappers are provided in the ```examples/``` folder. These serve as templates for integrating arbitrary NNPs with ML-FSM   
+3. Some ML potentials do not offer a native ASE interface. To accommodate these, a minimal example of custom ```ase.Calculator``` wrappers is provided in the ```examples/``` folder. This serves as templates for integrating arbitrary NNPs with ML-FSM   
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
 
