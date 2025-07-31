@@ -2,7 +2,7 @@
 name = "mlfsm"
 description = "python implementation of the Freezing String Method"
 license = {file = "LICENSE"}
-version = "0.0.1"
+version = "1.0.0"
 readme = "README.md"
 keywords = []
 authors = [{name = "Jonah Marks and Joe Gomes"}]
@@ -51,10 +51,7 @@ py3Dmol = "*"
 scipy-stubs = "*"
 types-networkx = "*"
 
-lightning = "*"
 pytorch = ">=2.4"
-pytorch_geometric = "*"
-pytorch_cluster = "*"
 pillow = "<11.3.0"
 
 sphinx = "*"

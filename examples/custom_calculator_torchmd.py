@@ -16,7 +16,7 @@ class TMDCalculator(Calculator):
     def __init__(self, **kwargs):
         """Initialize the calculator and load the TorchMD-Net model."""
         super().__init__(self, **kwargs)
-        checkpoint = "/Users/jonmarks/ts_searches/fsm/gnns/epoch=359-val_loss=0.0212-test_loss=0.2853.ckpt"
+        checkpoint = "./pre_trained_gnns/epoch359_tensornet_spice.ckpt"
         self.model = load_model(checkpoint, derivative=True, remove_ref_energy=False)
         self.z = None
         self.batch = None
