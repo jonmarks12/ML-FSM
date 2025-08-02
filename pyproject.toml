@@ -6,10 +6,9 @@ version = "1.0.0"
 readme = "README.md"
 keywords = []
 authors = [
-    {name = "Jonah Marks", email= "jonahmarks22@gmail.com"},
-    {name="Joe Gomes"}
+    {name = "Jonah Marks and Joe Gomes", email= "jonahmarks22@gmail.com"}
     ]
-maintainers = [{name = "Jonah Marks", email= "jonahmarks22@gmail.com"}]
+maintainers = [{name = "Jonah Marks"}]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
@@ -121,4 +120,4 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [tool.hatch.build]
-packages = ["src/mlfsm"]
+sources=["src"]
