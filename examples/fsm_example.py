@@ -10,7 +10,6 @@ mlfsm package. Currently supported calculators include:
     - FAIR UMA
     - AIMNet2
     - MACEOFF
-    - SchNet
     - EMT
 
 Only the selected calculator needs to be installed in the Python environment.
