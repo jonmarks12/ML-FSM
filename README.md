@@ -17,8 +17,15 @@ This repository provides an implementation of the Freezing String Method (FSM) f
 
 ## Installation
 
-Clone the repository and install:
+### Install via PyPI
 
+To install the latest stable release:
+
+```
+pip install mlfsm
+```
+### Install from source (development version)
+If you want the latest development version:
 ```bash
 git clone https://github.com/jonmarks12/ML-FSM.git
 cd ML-FSM
