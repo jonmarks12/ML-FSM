@@ -5,7 +5,11 @@ license = {file = "LICENSE"}
 version = "1.0.0"
 readme = "README.md"
 keywords = []
-authors = [{name = "Jonah Marks and Joe Gomes"}]
+authors = [
+    {name = "Jonah Marks", email= "jonahmarks22@gmail.com"},
+    {name="Joe Gomes"}
+    ]
+maintainers = [{name = "Jonah Marks", email= "jonahmarks22@gmail.com"}]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
@@ -14,6 +18,11 @@ dependencies = [
     "geometric>=1.0.0",
     "networkx>=3.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jonmarks12/mlfsm"
+Repository = "https://github.com/jonmarks12/mlfsm"
+Issues = "https://github.com/jonmarks12/mlfsm/issues"
 
 [tool.pixi.project]
 channels = ["conda-forge", "pytorch"]
@@ -34,7 +43,7 @@ fmt = { cmd="ruff format ." }
 lint = { cmd="ruff check . --fix" }
 types = { cmd="mypy ." }
 test = { cmd="pytest" }
-coverage = { cmd = "pytest --cov=mlfsm --cov-report=xml" }
+coverage = { cmd = "pytest --cov=src/mlfsm --cov-report=xml" }
 docs = { cmd="sphinx-build -b html docs/source docs/build" }
 all = { depends-on = ["fmt", "lint", "types", "test", "docs"] }
 
@@ -103,10 +112,13 @@ convention = "numpy"
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "ml-fsm"]
+testpaths = ["tests"]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 
 [build-system]
 build-backend = "hatchling.build"
 requires = ["hatchling"]
+
+[tool.hatch.build]
+packages = ["src/mlfsm"]
