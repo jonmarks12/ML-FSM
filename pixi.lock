@@ -3003,8 +3003,8 @@ packages:
   timestamp: 1730231808335
 - pypi: ./
   name: mlfsm
-  version: 1.0.3
-  sha256: f4dd024a3c7af5096c2ca300f4560d13dcabdf153949d24052b60aa4fcada06b
+  version: 1.0.0
+  sha256: 9f44afeeef13dc94fa60a2510bb04674d75f160dc15bb3aa1d3f27da9ffc0ef8
   requires_dist:
   - numpy>=1.26
   - ase>=3.22
