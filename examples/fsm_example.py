@@ -16,6 +16,7 @@ Only the selected calculator needs to be installed in the Python environment.
 """
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 from typing import Any
@@ -71,8 +72,28 @@ def run_fsm(
 
     # Load structures
     reactant, product = load_xyz(reaction_dir)
+    with open(os.path.join(reaction_dir, "chg")) as f:
+        chg = int(f.read())
+    with open(os.path.join(reaction_dir, "mult")) as f:
+        mult = int(f.read())
 
     calc: Any
+
+    # works for FAIRchem models and Q-Chem
+    reactant.info.update({"charge": chg, "spin": mult})
+    product.info.update({"charge": chg, "spin": mult})
+
+    # some models prefer to have it set in the initial_charges
+    chg_list = reactant.get_initial_charges()
+    chg_list[0] = chg
+    mult_list = reactant.get_initial_magnetic_moments()
+    mult_list[0] = mult - 1
+
+    reactant.set_initial_magnetic_moments(mult_list)
+    reactant.set_initial_charges(chg_list)
+
+    product.set_initial_magnetic_moments(mult_list)
+    product.set_initial_charges(chg_list)
 
     # Load calculator
     if calculator == "qchem":
