@@ -35,5 +35,35 @@ exclude_patterns: list[str] = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+
+# Theme
+html_theme = "sphinx_rtd_theme"  # or 'furo' for a modern look
+
+# Extensions
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",  # for Google/NumPy docstrings
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+]
+
+# Autodoc settings
+autodoc_default_options = {
+    "members": True,
+    "member-order": "bysource",
+    "special-members": "__init__",
+    "undoc-members": True,
+    "exclude-members": "__weakref__",
+}
+
+# Autosummary
+autosummary_generate = True
+
+# Napoleon settings (if using Google/NumPy docstrings)
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
