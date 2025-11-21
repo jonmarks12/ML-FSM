@@ -29,11 +29,15 @@ class FreezingString:
     """Implements the Freezing String Method."""
 
     def __init__(
-        self, reactant: Atoms, product: Atoms, nnodes_min: int = 10, interp_method: str = "ric", ninterp: int = 100
+        self, reactant: Atoms, product: Atoms, nnodes_min: int = 10, interp_method: str = "ric", ninterp: int = 100, stepsize: Optional[float] = None
     ) -> None:
         self.interp: Any
+        self.interp_method = interp_method
         self.nnodes_min = int(nnodes_min)
         self.ninterp = int(ninterp)
+        self.stepsize = float(stepsize) if stepsize else stepsize
+        self.use_cartesian_distance = True if stepsize else False
+
         if interp_method == "cart":
             self.interp = Linear
         elif interp_method == "lst":
@@ -46,10 +50,17 @@ class FreezingString:
         self.atoms = reactant.copy()
         self.natoms = len(self.atoms.numbers)
 
-        interp = self.interp(reactant, product, ninterp=self.ninterp)
-        s = calculate_arc_length(interp())
-        self.dist = s[-1]
-        self.stepsize = self.dist / self.nnodes_min
+        if not self.use_cartesian_distance:
+            interp = self.interp(reactant, product, ninterp=self.ninterp)
+            s = calculate_arc_length(interp())
+            self.dist = s[-1]
+            self.stepsize = self.dist / self.nnodes_min
+
+        else:
+            interp = Linear(reactant, product, ninterp=self.ninterp)
+            s = calculate_arc_length(interp())
+            self.dist = s[-1]
+            self.nnodes_min = int(self.dist / self.stepsize)
 
         logger.info(f"NNODES_MIN: {self.nnodes_min}")
         logger.info(f"DIST: {self.dist:.3f} STEPSIZE: {self.stepsize:.3f}")
@@ -107,43 +118,133 @@ class FreezingString:
         r_xyz, p_xyz = project_trans_rot(r_atoms.get_positions(), p_atoms.get_positions())
         r_xyz, p_xyz = r_xyz.flatten(), p_xyz.flatten()
 
-        interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp)
+        return_q = self.use_cartesian_distance
+        interp = self.interp(r_atoms, p_atoms, ninterp=self.ninterp, return_q=return_q)
         try:
             self.coordsobj = interp.coords
         except Exception:
             self.coordsobj = Cartesian(r_atoms, p_atoms)
-        string = interp()
-        s = calculate_arc_length(string)
-        cs = CubicSpline(s, string.reshape(self.ninterp, 3 * self.natoms), axis=0)
-        self.dist = s[-1]
 
-        if self.dist < self.stepsize:
-            self.growing = False
-            return
+        if self.use_cartesian_distance and self.interp_method == 'ric':
 
-        r_idx = np.abs(s - self.stepsize).argmin()
-        p_idx = np.abs(s - (s[-1] - self.stepsize)).argmin()
-        r_frontier = self.atoms.copy()
-        r_frontier.set_positions(string[r_idx].reshape(-1, 3))
+            # with return_q=True, string is returned in internal coordinates
+            string = interp()
 
-        self.r_string += [r_frontier]
-        self.r_fix += [False]
-        self.r_energy += [None]
-        self.r_tangent += [normalize(cs(s[r_idx], 1))]
-        self.r_nnodes = len(self.r_string)
+            # compute arc length in internal coordinates
+            s = calculate_arc_length(string)
+            cs = CubicSpline(s, string, axis=0)
 
-        if self.dist <= 2 * self.stepsize:
-            self.growing = False
-            return
+            # distance should be calculated based on cartesians
+            self.dist = distance(r_xyz, p_xyz)
 
-        p_frontier = self.atoms.copy()
-        p_frontier.set_positions(string[p_idx].reshape(-1, 3))
+            if self.dist < self.stepsize:
+                self.growing = False
+                return
 
-        self.p_string += [p_frontier]
-        self.p_fix += [False]
-        self.p_energy += [None]
-        self.p_tangent += [normalize(cs(s[p_idx], 1))]
-        self.p_nnodes = len(self.p_string)
+            # convert geometries one-by-one from reactant side until stepsize is reached
+            r_prev = r_xyz.copy().reshape(-1, 3)
+            r_idx = 1
+            for qtarget in string[1:-1]:
+                r_next = interp.coords.x(r_prev, qtarget)
+                _, r_next = project_trans_rot(r_prev, r_next)
+                r_next = r_next.reshape(-1, 3)
+                r_s = distance(r_xyz, r_next)
+                if r_s > self.stepsize:
+                    break
+                r_prev = r_next.copy()
+                r_idx += 1
+
+            #print(f"FOUND r_idx: {r_idx} r_s: {r_s} stepsize: {self.stepsize}")
+ 
+            r_frontier = self.atoms.copy()
+            r_frontier.set_positions(r_next.reshape(-1, 3))
+
+            # calculate q-tangent and convert to Cartesians
+            dqds = cs(s[r_idx], 1)
+            Bprim = interp.coords.b_matrix(r_next)
+            U = interp.coords.u_matrix(Bprim)
+            B = U.T @ Bprim
+            BT_inv = np.linalg.pinv(B @ B.T) @ B
+            dqds = U.T @ dqds
+            dxds = BT_inv.T @ dqds
+
+            self.r_string += [r_frontier]
+            self.r_fix += [False]
+            self.r_energy += [None]
+            self.r_tangent += [normalize(dxds)]
+            self.r_nnodes = len(self.r_string)
+
+            if self.dist <= 2 * self.stepsize:
+                self.growing = False
+                return
+
+            # convert geometries one-by-one from product side until stepsize is reached
+            p_prev = p_xyz.copy().reshape(-1, 3)
+            p_idx = 1
+            for qtarget in string[1:-1][::-1]:
+                p_next = interp.coords.x(p_prev, qtarget)
+                _, p_next = project_trans_rot(p_prev, p_next)
+                p_next = p_next.reshape(-1, 3)
+                p_s = distance(p_xyz, p_next)
+                if p_s > self.stepsize:
+                    break
+                p_prev = p_next.copy()
+                p_idx += 1
+
+            #print(f"FOUND p_idx: {p_idx} p_s: {p_s} stepsize: {self.stepsize}")
+
+            p_frontier = self.atoms.copy()
+            p_frontier.set_positions(p_next.reshape(-1, 3))
+
+            # calculate q-tangent and convert to Cartesians
+            dqds = cs(s[p_idx], 1)
+            Bprim = interp.coords.b_matrix(p_next)
+            U = interp.coords.u_matrix(Bprim)
+            B = U.T @ Bprim
+            BT_inv = np.linalg.pinv(B @ B.T) @ B
+            dqds = U.T @ dqds
+            dxds = BT_inv.T @ dqds
+
+            self.p_string += [p_frontier]
+            self.p_fix += [False]
+            self.p_energy += [None]
+            self.p_tangent += [normalize(dxds)]
+            self.p_nnodes = len(self.p_string)
+
+        else:
+
+            string = interp()
+            s = calculate_arc_length(string)
+            cs = CubicSpline(s, string.reshape(self.ninterp, 3 * self.natoms), axis=0)
+            self.dist = s[-1]
+
+            if self.dist < self.stepsize:
+                self.growing = False
+                return
+
+            r_idx = np.abs(s - self.stepsize).argmin()
+            p_idx = np.abs(s - (s[-1] - self.stepsize)).argmin()
+            r_frontier = self.atoms.copy()
+            r_frontier.set_positions(string[r_idx].reshape(-1, 3))
+
+            self.r_string += [r_frontier]
+            self.r_fix += [False]
+            self.r_energy += [None]
+            self.r_tangent += [normalize(cs(s[r_idx], 1))]
+            self.r_nnodes = len(self.r_string)
+
+            if self.dist <= 2 * self.stepsize:
+                self.growing = False
+                return
+
+            p_frontier = self.atoms.copy()
+            p_frontier.set_positions(string[p_idx].reshape(-1, 3))
+
+            self.p_string += [p_frontier]
+            self.p_fix += [False]
+            self.p_energy += [None]
+            self.p_tangent += [normalize(cs(s[p_idx], 1))]
+            self.p_nnodes = len(self.p_string)
 
     def optimize(self, optimizer: Any) -> None:
         """Relax unfixed nodes on the hyperplane orthogonal to the local tangent direction."""
