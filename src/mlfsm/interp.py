@@ -24,6 +24,7 @@ class Interpolate:
     atoms2: Atoms
     ninterp: int
     gtol: float = 1e-4
+    return_q: bool = False
 
     def interpolate(self) -> NDArray[np.float32]:
         """Abstract interpolationn routine-must be overridden."""
@@ -132,9 +133,16 @@ class RIC(Interpolate):
         def xab(f: float) -> NDArray[np.float64]:
             return (1 - f) * q1 + f * q2
 
+        fs = np.linspace(0, 1, self.ninterp)
+        if self.return_q:
+            string = []
+            for f in fs:
+                string.append(xab(f))
+            return np.array(string, dtype=np.float32)
+
         xyz = xyz1
         string = []
-        for f in np.linspace(0, 1, self.ninterp):
+        for f in fs:
             xyz = self.coords.x(xyz, xab(f))  # type ignore[no-untyped-call]
             string.append(xyz)
 
