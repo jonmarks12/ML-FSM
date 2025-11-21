@@ -19,7 +19,7 @@ import argparse
 import os
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from mlfsm.cos import FreezingString
 from mlfsm.opt import CartesianOptimizer, InternalsOptimizer, Optimizer
@@ -37,6 +37,7 @@ def run_fsm(
     maxiter: int = 1,
     dmax: float = 0.3,
     nnodes_min: int = 10,
+    stepsize: Optional[float] = None,
     ninterp: int = 100,
     suffix: str | None = None,
     calculator: str = "qchem",
@@ -144,7 +145,7 @@ def run_fsm(
         raise ValueError(f"Unknown calculator {calculator}")
 
     # Initialize FSM string
-    string = FreezingString(reactant, product, nnodes_min, interp, ninterp)
+    string = FreezingString(reactant, product, nnodes_min, interp, ninterp, stepsize)
     if interpolate:
         string.interpolate(outdir)
         return
@@ -177,6 +178,7 @@ if __name__ == "__main__":
         "--interp", type=str, default="ric", choices=["cart", "lst", "ric"], help="Interpolation method"
     )
     parser.add_argument("--nnodes_min", type=int, default=18, help="Minimum number of nodes in the FSM string")
+    parser.add_argument("--stepsize", type=float, default=None, help="Stepsize in Angstrom used in interpolation. Overrides and sets nnodes_min based on Cartesian distance.")
     parser.add_argument("--ninterp", type=int, default=50, help="Number of interpolation points between nodes")
     parser.add_argument("--suffix", type=str, default=None, help="Suffix for output directory")
     parser.add_argument(
