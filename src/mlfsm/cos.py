@@ -146,7 +146,7 @@ class FreezingString:
             r_idx = 1
             for qtarget in string[1:-1]:
                 r_next = interp.coords.x(r_prev, qtarget)
-                _, r_next = project_trans_rot(r_prev, r_next)
+                _, r_next = project_trans_rot(r_xyz.reshape(-1, 3), r_next)
                 r_next = r_next.reshape(-1, 3)
                 r_s = distance(r_xyz, r_next)
                 if r_s > self.stepsize:
@@ -183,7 +183,7 @@ class FreezingString:
             p_idx = 1
             for qtarget in string[1:-1][::-1]:
                 p_next = interp.coords.x(p_prev, qtarget)
-                _, p_next = project_trans_rot(p_prev, p_next)
+                _, p_next = project_trans_rot(p_xyz.reshape(-1, 3), p_next)
                 p_next = p_next.reshape(-1, 3)
                 p_s = distance(p_xyz, p_next)
                 if p_s > self.stepsize:
