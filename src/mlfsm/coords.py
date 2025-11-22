@@ -295,7 +295,7 @@ class Redundant(Coordinates):
         coords: Dict[str, Any] = {}
         xyz = atoms.get_positions()
         xyzb = xyz * angs_to_bohr
-        frags, conn, conn_frag, conn_frag_aux, conn_hbond = self.connectivity(atoms)
+        _frags, conn, conn_frag, conn_frag_aux, conn_hbond = self.connectivity(atoms)
         natoms = len(atoms)
 
         total_conn = (conn + conn_frag + conn_hbond) > 0
