@@ -37,7 +37,7 @@ def run_fsm(
     maxiter: int = 1,
     dmax: float = 0.3,
     nnodes_min: int = 10,
-    stepsize: Optional[float] = None,
+    stepsize: float = 0.,
     ninterp: int = 100,
     suffix: str | None = None,
     calculator: str = "qchem",
@@ -178,7 +178,7 @@ if __name__ == "__main__":
         "--interp", type=str, default="ric", choices=["cart", "lst", "ric"], help="Interpolation method"
     )
     parser.add_argument("--nnodes_min", type=int, default=18, help="Minimum number of nodes in the FSM string")
-    parser.add_argument("--stepsize", type=float, default=None, help="Stepsize in Angstrom used in interpolation. Overrides and sets nnodes_min based on Cartesian distance.")
+    parser.add_argument("--stepsize", type=float, default=0., help="Stepsize in Angstrom used in interpolation. Overrides and sets nnodes_min based on Cartesian distance.")
     parser.add_argument("--ninterp", type=int, default=50, help="Number of interpolation points between nodes")
     parser.add_argument("--suffix", type=str, default=None, help="Suffix for output directory")
     parser.add_argument(
