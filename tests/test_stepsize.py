@@ -23,7 +23,17 @@ def test_fsm_script_diels_alder() -> None:
         # Run the FSM script
 
         result = subprocess.run(
-            [sys.executable, str(script_path), str(rxn_dir), "--calculator", "emt", "--suffix", "test_fsm_script", "--stepsize", "0.2"],
+            [
+                sys.executable,
+                str(script_path),
+                str(rxn_dir),
+                "--calculator",
+                "emt",
+                "--suffix",
+                "test_fsm_script",
+                "--stepsize",
+                "0.2",
+            ],
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

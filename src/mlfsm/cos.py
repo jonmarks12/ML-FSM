@@ -29,13 +29,19 @@ class FreezingString:
     """Implements the Freezing String Method."""
 
     def __init__(
-        self, reactant: Atoms, product: Atoms, nnodes_min: int = 10, interp_method: str = "ric", ninterp: int = 100, stepsize: float = 0.
+        self,
+        reactant: Atoms,
+        product: Atoms,
+        nnodes_min: int = 10,
+        interp_method: str = "ric",
+        ninterp: int = 100,
+        stepsize: float = 0.0,
     ) -> None:
         self.interp: Any
         self.interp_method = interp_method
         self.nnodes_min = int(nnodes_min)
         self.ninterp = int(ninterp)
-        self.use_cartesian_distance = True if stepsize>0 else False
+        self.use_cartesian_distance = True if stepsize > 0 else False
 
         if interp_method == "cart":
             self.interp = Linear
@@ -124,8 +130,7 @@ class FreezingString:
         except Exception:
             self.coordsobj = Cartesian(r_atoms, p_atoms)
 
-        if self.use_cartesian_distance and self.interp_method == 'ric':
-
+        if self.use_cartesian_distance and self.interp_method == "ric":
             string = interp()
             s = calculate_arc_length(string)
             cs = CubicSpline(s, string, axis=0)
@@ -198,7 +203,6 @@ class FreezingString:
             self.p_nnodes = len(self.p_string)
 
         else:
-
             string = interp()
             s = calculate_arc_length(string)
             cs = CubicSpline(s, string.reshape(self.ninterp, 3 * self.natoms), axis=0)
