@@ -59,11 +59,12 @@ Note: Users are responsible for installing their desired quantum chemistry backe
 ## Usage
 For projects referencing algorithmic improvements to the FSM please cite:
 
-Marks, J., & Gomes, J. (2024). Incorporation of Internal Coordinates Interpolation into the Freezing String Method. http://arxiv.org/abs/2407.09763
+>Marks, J., & Gomes, J. (2025). Incorporation of Internal Coordinates Interpolation into the Freezing String Method. Journal of Chemical Theory and Computation. https://doi.org/10.1021/acs.jctc.5c01492
+
 
 For projects using the FSM with ML-based potentials please cite:
 
-Marks, J., & Gomes, J. (2025). Efficient Transition State Searches by Freezing String Method with Graph Neural Network Potentials. http://arxiv.org/abs/2501.06159
+>Marks, J., & Gomes, J. (2025). Efficient Transition State Searches by Freezing String Method with Graph Neural Network Potentials. http://arxiv.org/abs/2501.06159
 
 ## License
 
